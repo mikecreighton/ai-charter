@@ -1,10 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List, Optional
 from fastapi.responses import StreamingResponse
 from ..llm.openai_provider import OpenAIProvider
 from ..llm.anthropic_provider import AnthropicProvider
 from ..config import settings, LLMProvider
+from ..llm.base import get_llm_client
+from ..llm.prompts.initial_analysis import (
+    INITIAL_ANALYSIS_SYSTEM_PROMPT,
+    INITIAL_ANALYSIS_USER_PROMPT,
+)
+import json
 
 router = APIRouter()
 
@@ -13,6 +19,23 @@ class GenerateRequest(BaseModel):
     prompt: str
     stream: bool = False
     system_message: str | None = None
+
+
+class FollowUpQuestion(BaseModel):
+    id: str
+    question: str
+    suggestedAnswer: Optional[str] = None
+
+
+class ProcessInitialResponse(BaseModel):
+    needsFollowUp: bool
+    followUpQuestions: Optional[List[FollowUpQuestion]] = None
+    overview: Optional[str] = None
+
+
+class ProjectInput(BaseModel):
+    projectName: str
+    description: str
 
 
 def get_provider():
@@ -68,5 +91,35 @@ async def test_validate_key():
         provider = get_provider()
         is_valid = await provider.validate_api_key()
         return {"valid": is_valid}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/process-initial", response_model=ProcessInitialResponse)
+async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse:
+    try:
+        # Get LLM client
+        llm = get_llm_client()
+
+        # Format prompt with project details
+        prompt = INITIAL_ANALYSIS_USER_PROMPT.format(
+            project_name=project.projectName, description=project.description
+        )
+
+        # Get LLM response
+        response = await llm.create_chat_completion(
+            [
+                {"role": "system", "content": INITIAL_ANALYSIS_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ]
+        )
+
+        # Parse LLM response
+        try:
+            result = json.loads(response)
+            return ProcessInitialResponse(**result)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Failed to parse LLM response")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
