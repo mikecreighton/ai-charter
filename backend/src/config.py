@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     anthropic_api_key: str | None = None
     llm_provider: LLMProvider = LLMProvider.OPENAI
-    llm_model: str = "gpt-4o-2024-11-20"  # Default model
+    llm_model: str = "gpt-4-turbo-preview"  # Default model
 
     model_config = SettingsConfigDict(env_file=".env")
 
@@ -25,6 +25,14 @@ class Settings(BaseSettings):
             LLMProvider.ANTHROPIC: self.anthropic_api_key,
             LLMProvider.OPENROUTER: self.openrouter_api_key,
             LLMProvider.GEMINI: self.gemini_api_key,
+        }[self.llm_provider]
+
+    def get_base_url(self) -> str | None:
+        return {
+            LLMProvider.OPENAI: None,
+            LLMProvider.ANTHROPIC: None,
+            LLMProvider.OPENROUTER: "https://openrouter.ai/api/v1",
+            LLMProvider.GEMINI: "https://generativelanguage.googleapis.com/v1",
         }[self.llm_provider]
 
 

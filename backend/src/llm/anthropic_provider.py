@@ -1,15 +1,12 @@
 from typing import AsyncGenerator
-import openai
+from anthropic import AsyncAnthropic
 from .base import LLMProvider
 
 
-class OpenAIProvider(LLMProvider):
-    def __init__(self, api_key: str, model: str, base_url: str | None = None):
+class AnthropicProvider(LLMProvider):
+    def __init__(self, api_key: str, model: str):
         super().__init__(api_key, model)
-        client_args = {"api_key": api_key}
-        if base_url:
-            client_args["base_url"] = base_url
-        self.client = openai.AsyncOpenAI(**client_args)
+        self.client = AsyncAnthropic(api_key=api_key)
 
     async def generate(
         self, prompt: str, stream: bool = False, **kwargs
@@ -23,30 +20,34 @@ class OpenAIProvider(LLMProvider):
             if stream:
                 return self._generate_stream(messages, **kwargs)
             else:
-                response = await self.client.chat.completions.create(
+                response = await self.client.messages.create(
                     model=self.model,
                     messages=messages,
                     stream=False,
                     **kwargs,
                 )
-                return response.choices[0].message.content or ""
+                return response.content[0].text
         except Exception as e:
             raise e
 
     async def _generate_stream(self, messages: list, **kwargs) -> AsyncGenerator[str, None]:
-        stream = await self.client.chat.completions.create(
+        stream = await self.client.messages.create(
             model=self.model,
             messages=messages,
             stream=True,
             **kwargs,
         )
-        async for chunk in stream:
-            if chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+        async for chunk in stream.text_stream:
+            yield chunk
 
     async def validate_api_key(self) -> bool:
         try:
-            await self.client.models.list()
+            # Make a minimal request to test the API key
+            await self.client.messages.create(
+                model=self.model,
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1,
+            )
             return True
-        except:
+        except Exception:
             return False

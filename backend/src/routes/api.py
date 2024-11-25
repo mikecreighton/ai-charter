@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from typing import AsyncGenerator
 from fastapi.responses import StreamingResponse
 from ..llm.openai_provider import OpenAIProvider
-from ..config import settings
+from ..llm.anthropic_provider import AnthropicProvider
+from ..config import settings, LLMProvider
 
 router = APIRouter()
 
@@ -14,15 +15,26 @@ class GenerateRequest(BaseModel):
     system_message: str | None = None
 
 
+def get_provider():
+    api_key = settings.get_active_api_key()
+    if not api_key:
+        raise HTTPException(status_code=500, detail="No API key configured")
+
+    if settings.llm_provider == LLMProvider.ANTHROPIC:
+        return AnthropicProvider(api_key=api_key, model=settings.llm_model)
+    else:  # OPENAI, OPENROUTER, GEMINI
+        return OpenAIProvider(
+            api_key=api_key,
+            model=settings.llm_model,
+            base_url=settings.get_base_url(),
+        )
+
+
 @router.post("/test/generate")
 async def test_generate(request: GenerateRequest):
     """Test endpoint for non-streaming LLM generation"""
     try:
-        provider = OpenAIProvider(
-            api_key=settings.get_active_api_key() or "",
-            model=settings.llm_model,
-        )
-
+        provider = get_provider()
         if request.system_message:
             provider.set_system_message(request.system_message)
 
@@ -36,11 +48,7 @@ async def test_generate(request: GenerateRequest):
 async def test_generate_stream(request: GenerateRequest):
     """Test endpoint for streaming LLM generation"""
     try:
-        provider = OpenAIProvider(
-            api_key=settings.get_active_api_key() or "",
-            model=settings.llm_model,
-        )
-
+        provider = get_provider()
         if request.system_message:
             provider.set_system_message(request.system_message)
 
@@ -57,10 +65,7 @@ async def test_generate_stream(request: GenerateRequest):
 async def test_validate_key():
     """Test endpoint for validating the current API key"""
     try:
-        provider = OpenAIProvider(
-            api_key=settings.get_active_api_key() or "",
-            model=settings.llm_model,
-        )
+        provider = get_provider()
         is_valid = await provider.validate_api_key()
         return {"valid": is_valid}
     except Exception as e:
