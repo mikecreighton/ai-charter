@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     anthropic_api_key: str | None = None
     llm_provider: LLMProvider = LLMProvider.OPENAI
-    llm_model: str = "gpt-4-turbo-preview"  # Default model
+    llm_model: str = "gpt-4o"  # Default model
 
     model_config = SettingsConfigDict(env_file=".env")
 
@@ -32,7 +32,7 @@ class Settings(BaseSettings):
             LLMProvider.OPENAI: None,
             LLMProvider.ANTHROPIC: None,
             LLMProvider.OPENROUTER: "https://openrouter.ai/api/v1",
-            LLMProvider.GEMINI: "https://generativelanguage.googleapis.com/v1",
+            LLMProvider.GEMINI: "https://generativelanguage.googleapis.com/v1beta/openai/",
         }[self.llm_provider]
 
 
