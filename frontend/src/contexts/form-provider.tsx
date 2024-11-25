@@ -1,30 +1,45 @@
 import { ReactNode, useState } from 'react';
-import { ProjectFormData } from '@/types/form';
-import { FormContext } from './form-context-types';
+import { ProjectFormData, FollowUpQuestion, FormContextState } from '@/types/form';
+import { FormContext } from './form-context';
 
 export function FormProvider({ children }: { children: ReactNode }) {
   const [formData, setFormData] = useState<ProjectFormData>({
     projectName: '',
     description: '',
+    followUpResponses: {},
   });
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
+  const [followUpQuestions, setFollowUpQuestions] = useState<FollowUpQuestion[]>([]);
+  const [currentStep, setCurrentStep] = useState<FormContextState['currentStep']>('initial');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const updateFormData = (data: Partial<ProjectFormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
   };
 
-  const nextStep = () => setCurrentStep(prev => prev + 1);
-  const previousStep = () => setCurrentStep(prev => Math.max(0, prev - 1));
+  const updateFollowUpResponse = (id: string, response: string) => {
+    setFormData(prev => ({
+      ...prev,
+      followUpResponses: {
+        ...prev.followUpResponses,
+        [id]: response,
+      },
+    }));
+  };
+
+  const setFollowUps = (questions: FollowUpQuestion[]) => {
+    setFollowUpQuestions(questions);
+  };
 
   const value = {
     formData,
+    followUpQuestions,
     currentStep,
-    isComplete,
+    isProcessing,
     updateFormData,
-    nextStep,
-    previousStep,
-    setComplete: setIsComplete,
+    updateFollowUpResponse,
+    setStep: setCurrentStep,
+    setFollowUps,
+    setProcessing: setIsProcessing,
   };
 
   return <FormContext.Provider value={value}>{children}</FormContext.Provider>;

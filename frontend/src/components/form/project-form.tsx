@@ -14,10 +14,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
+import { processInitialInput } from '@/services/llm-service';
 import type { ProjectFormData } from "@/types/form";
 
 export const ProjectForm = () => {
-  const { updateFormData, nextStep } = useFormContext();
+  const { updateFormData, setStep } = useFormContext();
   
   const form = useHookForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
@@ -31,8 +32,18 @@ export const ProjectForm = () => {
     try {
       console.log('Form submitted:', data);
       updateFormData(data);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
-      nextStep();
+      
+      const result = await processInitialInput(
+        data.projectName,
+        data.description
+      );
+
+      if (result.needsFollowUp) {
+        setStep('followUp');
+      } else {
+        setStep('preview');
+      }
+      
     } catch (err) {
       form.setError("root", { 
         message: err instanceof Error ? err.message : "Something went wrong" 
@@ -62,11 +73,11 @@ export const ProjectForm = () => {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Project Description</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Describe your project's purpose and goals..." 
-                  className="min-h-[100px]"
+                  placeholder="Describe your project in detail. What are you building? What problems does it solve? What are the key features?" 
+                  className="min-h-[200px]"
                   {...field} 
                 />
               </FormControl>
@@ -85,7 +96,7 @@ export const ProjectForm = () => {
           className="w-full"
         >
           {form.formState.isSubmitting && <LoadingSpinner />}
-          {form.formState.isSubmitting ? "Submitting..." : "Next Step"}
+          {form.formState.isSubmitting ? "Processing..." : "Submit Description"}
         </Button>
       </form>
     </Form>
