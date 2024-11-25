@@ -5,6 +5,7 @@
 aicharter/
 ├── frontend/           # React application
 └── backend/           # Python API integration
+└── project-charter/    # All the information about the project that you are working on
 ```
 
 ## Frontend Guidelines
@@ -158,3 +159,4 @@ ANTHROPIC_API_KEY=xxx
 - Inline comments for complex logic
 - Use consistent style and formatting
 - Include usage examples in code
+- IMPORTANT: Update the `/project-charter/project-development-plan.md` file as features are implemented, checking off the corresponding tasks.
