@@ -15,8 +15,6 @@
 - [x] Configure basic routing structure
 - [x] Create MainLayout component for consistent page structure
 - [x] Set up initial form with basic fields
-- [ ] Add tech stack selection fields
-- [ ] Add project constraints fields
 - [ ] Implement form validation
 - [ ] Add loading states and error handling
 
