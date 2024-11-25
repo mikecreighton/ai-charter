@@ -15,8 +15,8 @@
 - [x] Configure basic routing structure
 - [x] Create MainLayout component for consistent page structure
 - [x] Set up initial form with basic fields
-- [ ] Implement form validation
-- [ ] Add loading states and error handling
+- [x] Implement form validation
+- [x] Add loading states and error handling
 
 ### 1.2 Backend Setup
 - [ ] Set up Python virtual environment
