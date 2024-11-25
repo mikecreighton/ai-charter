@@ -1,7 +1,8 @@
-openai
-anthropic
-pydantic
 fastapi
 uvicorn
 python-dotenv
-gunicorn
+openai
+anthropic
+pydantic
+pydantic-settings
+python-multipart
