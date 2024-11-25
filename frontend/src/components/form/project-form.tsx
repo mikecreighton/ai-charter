@@ -1,6 +1,6 @@
-import { useForm } from "react-hook-form";
+import { useForm as useHookForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { projectFormSchema, type ProjectFormData } from "@/lib/form-validation";
+import { projectFormSchema } from "@/lib/form-validation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useForm as useFormContext } from '@/hooks/use-form';
+import type { ProjectFormData } from "@/types/form";
 
 export const ProjectForm = () => {
-  const form = useForm<ProjectFormData>({
+  const { updateFormData, nextStep } = useFormContext();
+  
+  const form = useHookForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
       projectName: "",
@@ -26,7 +30,9 @@ export const ProjectForm = () => {
   const onSubmit = async (data: ProjectFormData) => {
     try {
       console.log('Form submitted:', data);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      updateFormData(data);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+      nextStep();
     } catch (err) {
       form.setError("root", { 
         message: err instanceof Error ? err.message : "Something went wrong" 
@@ -79,7 +85,7 @@ export const ProjectForm = () => {
           className="w-full"
         >
           {form.formState.isSubmitting && <LoadingSpinner />}
-          {form.formState.isSubmitting ? "Submitting..." : "Generate Project Documentation"}
+          {form.formState.isSubmitting ? "Submitting..." : "Next Step"}
         </Button>
       </form>
     </Form>
