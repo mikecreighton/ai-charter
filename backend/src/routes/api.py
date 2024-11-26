@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
+from enum import Enum
 from ..llm.base import get_llm_client
 from ..llm.prompts.initial_analysis import (
     INITIAL_ANALYSIS_SYSTEM_PROMPT,
@@ -46,6 +47,61 @@ class ProjectInput(BaseModel):
     description: str
 
 
+class DocumentType(str, Enum):
+    OVERVIEW = "overview"
+    PRD = "prd"
+    TECH_STACK = "techStack"
+    CODE_RULES = "codeRules"
+    DEVELOPMENT_PLAN = "developmentPlan"
+
+
+class BaseDocumentRequest(BaseModel):
+    type: DocumentType
+
+
+class OverviewRequest(BaseDocumentRequest):
+    projectName: str
+    description: str
+    analysis: Optional[str] = None
+    followUpQuestions: Optional[List[FollowUpQuestion]] = None
+    followUpResponses: Optional[Dict[str, str]] = None
+
+
+class PrdRequest(BaseDocumentRequest):
+    overview: str
+
+
+class TechStackRequest(BaseDocumentRequest):
+    overview: str
+    prd: str
+
+
+class CodeRulesRequest(BaseDocumentRequest):
+    techStack: str
+
+
+class DevelopmentPlanRequest(BaseDocumentRequest):
+    overview: str
+    prd: str
+    techStack: str
+    codeRules: str
+
+
+GenerateDocumentRequest = (
+    OverviewRequest
+    | PrdRequest
+    | TechStackRequest
+    | CodeRulesRequest
+    | DevelopmentPlanRequest
+)
+
+
+class GenerateDocumentResponse(BaseModel):
+    success: bool
+    content: Optional[str] = None
+    error: Optional[str] = None
+
+
 class GenerateOverviewRequest(BaseModel):
     projectName: str
     description: str
@@ -71,7 +127,9 @@ def get_provider():
 
 @router.post("/test/generate")
 async def test_generate(request: GenerateRequest):
-    """Test endpoint for non-streaming LLM generation"""
+    """
+    Test endpoint for non-streaming LLM generation
+    """
     try:
         provider = get_provider()
         if request.system_message:
@@ -85,7 +143,9 @@ async def test_generate(request: GenerateRequest):
 
 @router.post("/test/generate/stream")
 async def test_generate_stream(request: GenerateRequest):
-    """Test endpoint for streaming LLM generation"""
+    """
+    Test endpoint for streaming LLM generation
+    """
     try:
         provider = get_provider()
         if request.system_message:
@@ -102,7 +162,9 @@ async def test_generate_stream(request: GenerateRequest):
 
 @router.get("/test/validate-key")
 async def test_validate_key():
-    """Test endpoint for validating the current API key"""
+    """
+    Test endpoint for validating the current API key
+    """
     try:
         provider = get_provider()
         is_valid = await provider.validate_api_key()
@@ -113,6 +175,9 @@ async def test_validate_key():
 
 @router.post("/process-initial", response_model=ProcessInitialResponse)
 async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse:
+    """
+    Process the initial input for a project and return the analysis and follow-up questions (if the LLM deems them necessary).
+    """
     try:
         provider = get_provider()
         provider.set_system_message(INITIAL_ANALYSIS_SYSTEM_PROMPT)
@@ -139,9 +204,54 @@ async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/generate", response_model=GenerateDocumentResponse)
+async def generate_document(request: GenerateDocumentRequest):
+    """
+    Generate a document based on the provided request.
+    """
+    try:
+        provider = get_provider()
+
+        if isinstance(request, OverviewRequest):
+            # Set the system prompt for overview generation
+            provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)
+
+            # Format the base prompt with the required fields
+            prompt = PROJECT_OVERVIEW_USER_PROMPT.format(
+                project_name=request.projectName,
+                description=request.description,
+                analysis=request.analysis or "",
+            )
+
+            # Add follow-up responses if they exist
+            if request.followUpQuestions and request.followUpResponses:
+                prompt += PROJECT_OVERVIEW_USER_PROMPT_WITH_FOLLOW_UP.format(
+                    follow_up_questions_and_responses=format_followup_responses(
+                        request.followUpQuestions, request.followUpResponses
+                    ),
+                )
+
+            # Generate the content
+            content = await provider.generate(prompt, stream=False)
+            print("-- HIGH-LEVEL OVERVIEW CONTENT ------------------------- ")
+            print(content + "\n")
+            return {"success": True, "content": content}
+
+        # TODO: Handle other document types (PRD, TechStack, etc.)
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Document type {request.type} not yet implemented"
+            )
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 @router.post("/generate-overview")
 async def generate_overview(request: GenerateOverviewRequest):
-    """Generate project overview with or without follow-up responses"""
+    """
+    Generate project overview with or without follow-up responses
+    """
     try:
         provider = get_provider()
         provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)

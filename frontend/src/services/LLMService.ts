@@ -54,13 +54,13 @@ class LLMService {
     return response.json();
   }
 
-  async generate(prompt: string): Promise<string> {
+  async generate(jsonStringPayload: string): Promise<string> {
     const response = await fetch(`${config.apiUrl}/api/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt }),
+      body: jsonStringPayload,
     });
 
     if (!response.ok) {
