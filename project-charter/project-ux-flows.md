@@ -21,31 +21,31 @@ flowchart TD
     subgraph Generation["Document Generation Phase"]
         StartGen[Start generation] --> Overview
         
-        Overview[Generate project overview] --> ShowOverview[Show streaming preview]
+        Overview[Generate project overview] --> ShowOverview[Show preview]
         ShowOverview --> ConfirmOverview{User confirms?}
         ConfirmOverview -->|Yes| PRD
         ConfirmOverview -->|Edit| EditOverview[Edit overview]
         EditOverview --> ShowOverview
         
-        PRD[Generate PRD] --> ShowPRD[Show streaming preview]
+        PRD[Generate PRD] --> ShowPRD[Show preview]
         ShowPRD --> ConfirmPRD{User confirms?}
         ConfirmPRD -->|Yes| UXDocs
         ConfirmPRD -->|Edit| EditPRD[Edit PRD]
         EditPRD --> ShowPRD
         
-        UXDocs[Generate UX diagrams] --> ShowUX[Show streaming preview]
+        UXDocs[Generate UX diagrams] --> ShowUX[Show preview]
         ShowUX --> ConfirmUX{User confirms?}
         ConfirmUX -->|Yes| TechStack
         ConfirmUX -->|Edit| EditUX[Edit UX docs]
         EditUX --> ShowUX
         
-        TechStack[Generate tech stack] --> ShowTech[Show streaming preview]
+        TechStack[Generate tech stack] --> ShowTech[Show preview]
         ShowTech --> ConfirmTech{User confirms?}
         ConfirmTech -->|Yes| CodeRules
         ConfirmTech -->|Edit| EditTech[Edit tech stack]
         EditTech --> ShowTech
         
-        CodeRules[Generate code rules] --> ShowRules[Show streaming preview]
+        CodeRules[Generate code rules] --> ShowRules[Show preview]
         ShowRules --> ConfirmRules{User confirms?}
         ConfirmRules -->|Yes| Complete
         ConfirmRules -->|Edit| EditRules[Edit code rules]
