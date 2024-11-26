@@ -12,6 +12,7 @@ from ..llm.openai_provider import OpenAIProvider
 from ..llm.anthropic_provider import AnthropicProvider
 from ..config import LLMProvider
 from fastapi.responses import StreamingResponse
+import uuid
 
 # Create the router
 router = APIRouter()
@@ -38,6 +39,14 @@ class ProcessInitialResponse(BaseModel):
 class ProjectInput(BaseModel):
     projectName: str
     description: str
+
+
+class FollowUpSubmission(BaseModel):
+    projectName: str
+    description: str
+    initialAnalysis: str
+    followUpQuestions: List[FollowUpQuestion]
+    responses: dict[str, str]
 
 
 def get_provider():
@@ -100,24 +109,38 @@ async def test_validate_key():
 @router.post("/process-initial", response_model=ProcessInitialResponse)
 async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse:
     try:
-        # Get LLM client
         provider = get_provider()
         provider.set_system_message(INITIAL_ANALYSIS_SYSTEM_PROMPT)
 
-        # Format prompt with project details
         prompt = INITIAL_ANALYSIS_USER_PROMPT.format(
             project_name=project.projectName, description=project.description
         )
 
-        # Get LLM response
         response = await provider.generate(prompt, stream=False)
 
-        # Parse LLM response
         try:
             result = json.loads(response)
+
+            if result.get("needsFollowUp") and result.get("followUpQuestions"):
+                for question in result["followUpQuestions"]:
+                    if "id" not in question:
+                        question["id"] = f"q_{uuid.uuid4().hex[:8]}"
+
             return ProcessInitialResponse(**result)
         except json.JSONDecodeError:
             raise HTTPException(status_code=500, detail="Failed to parse LLM response")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/process-followup")
+async def process_followup(submission: FollowUpSubmission):
+    """Process follow-up responses and generate final overview"""
+    try:
+        # For now, just log what we received
+        print("Received follow-up submission:", submission)
+        return {"status": "received"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

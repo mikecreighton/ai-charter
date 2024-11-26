@@ -18,12 +18,12 @@ import type { ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
 
 export const InitialForm = () => {
-  const { updateFormData, setStep, setFollowUps, setProcessing } = useFormContext();
+  const { updateFormData, setStep, setFollowUps, setProcessing, setAnalysis, formData } = useFormContext();
   const form = useHookForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
-      projectName: "",
-      description: "",
+      projectName: formData.projectName || "",
+      description: formData.description || "",
     },
   });
 
@@ -45,6 +45,10 @@ export const InitialForm = () => {
         setStep('followUp');
       } else {
         setStep('preview');
+      }
+      
+      if (result.analysis) {
+        setAnalysis(result.analysis);
       }
       
     } catch (err) {

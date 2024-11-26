@@ -11,6 +11,7 @@ export function FormProvider({ children }: { children: ReactNode }) {
   const [followUpQuestions, setFollowUpQuestions] = useState<FollowUpQuestion[]>([]);
   const [currentStep, setCurrentStep] = useState<FormContextState['currentStep']>('initial');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [analysis, setAnalysis] = useState<string>();
 
   const updateFormData = (data: Partial<ProjectFormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -40,6 +41,8 @@ export function FormProvider({ children }: { children: ReactNode }) {
     setStep: setCurrentStep,
     setFollowUps,
     setProcessing: setIsProcessing,
+    analysis,
+    setAnalysis,
   };
 
   return <FormContext.Provider value={value}>{children}</FormContext.Provider>;

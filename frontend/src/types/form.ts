@@ -20,4 +20,6 @@ export interface FormContextState {
   setStep: (step: FormContextState['currentStep']) => void;
   setFollowUps: (questions: FollowUpQuestion[]) => void;
   setProcessing: (processing: boolean) => void;
+  analysis?: string;
+  setAnalysis: (analysis: string) => void;
 } 

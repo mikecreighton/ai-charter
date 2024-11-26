@@ -44,9 +44,9 @@
 ### 2.2 Dynamic Question Generation
 - [x] Create prompt template for follow-up questions
 - [x] Implement question generation API endpoint
-- [ ] Build UI components for dynamic questions
-- [ ] Add state management for question responses
-- [ ] Implement response validation
+- [x] Build UI components for dynamic questions
+- [x] Add state management for question responses
+- [x] Implement response validation
 
 ### 2.3 Form State Management
 - [ ] Set up React Context for global form state

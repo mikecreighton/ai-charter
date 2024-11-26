@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { submitFollowUpResponses } from '@/services/llm-service';
 
 // Create a dynamic schema based on the questions
 const createFollowUpSchema = (questions: Array<{ id: string }>) => {
@@ -30,7 +31,10 @@ export const FollowUpQuestions = () => {
     followUpQuestions, 
     updateFollowUpResponse, 
     setStep,
-    isProcessing 
+    isProcessing,
+    setProcessing,
+    formData,
+    analysis,
   } = useFormContext();
 
   const form = useHookForm({
@@ -41,13 +45,29 @@ export const FollowUpQuestions = () => {
     }, {} as Record<string, string>),
   });
 
+  if (!formData.projectName || !analysis) {
+    setStep('initial');
+    return null;
+  }
+
   const onSubmit = async (data: Record<string, string>) => {
     try {
+      setProcessing(true);
+      
       // Update responses in context
       Object.entries(data).forEach(([id, response]) => {
         if (response) {
           updateFollowUpResponse(id, response);
         }
+      });
+
+      // Submit everything to the API
+      await submitFollowUpResponses({
+        projectName: formData.projectName,
+        description: formData.description,
+        initialAnalysis: analysis!, // We'll need to add this to the form context
+        followUpQuestions,
+        responses: data,
       });
       
       // Move to preview step
@@ -56,6 +76,8 @@ export const FollowUpQuestions = () => {
       form.setError("root", {
         message: err instanceof Error ? err.message : "Something went wrong"
       });
+    } finally {
+      setProcessing(false);
     }
   };
 
