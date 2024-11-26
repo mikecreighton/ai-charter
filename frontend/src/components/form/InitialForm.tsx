@@ -13,11 +13,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { llmService } from '@/services/llm-service';
+import { llmService } from '@/services/LLMService';
 import type { InitialAnalysisResponse, ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
 import { useDocuments } from '@/contexts/DocumentContext';
-import { DocumentGenerator } from '@/services/document-generator';
+import { DocumentGenerator } from '@/services/DocumentGenerator';
 import { useState } from 'react';
 import { mockComplexInitialAnalysisResponse, mockInitialFormData } from "@/mock/form-data";
 

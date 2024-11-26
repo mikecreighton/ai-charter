@@ -1,6 +1,6 @@
 import { MainLayout } from '@/components/layout/MainLayout'
-import { ProjectForm } from '@/components/form/project-form'
-import { FormProvider } from '@/contexts/form-provider'
+import { ProjectForm } from '@/components/form/ProjectForm'
+import { FormProvider } from '@/contexts/FormProvider'
 import { DocumentProvider } from '@/contexts/DocumentContext'
 import './App.css'
 

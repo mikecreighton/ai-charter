@@ -16,7 +16,7 @@ import { useForm as useFormContext } from '@/hooks/use-form';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { mockFollowUpFormData } from '@/mock/form-data';
 import { useDocuments } from '@/contexts/DocumentContext';
-import { DocumentGenerator } from '@/services/document-generator';
+import { DocumentGenerator } from '@/services/DocumentGenerator';
 
 // Create a dynamic schema based on the questions
 const createFollowUpSchema = (questions: Array<{ id: string }>) => {

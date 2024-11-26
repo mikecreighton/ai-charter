@@ -1,6 +1,6 @@
 import { ReactNode, useReducer, useEffect } from 'react';
 import { ProjectFormData, FollowUpQuestion, FormContextState, InitialAnalysisResponse } from '@/types/form';
-import { FormContext } from './form-context';
+import { FormContext } from './FormContext';
 
 const STORAGE_KEY = 'ai-charter-form-state';
 

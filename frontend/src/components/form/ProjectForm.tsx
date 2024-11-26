@@ -1,7 +1,7 @@
 import { useForm as useFormContext } from '@/hooks/use-form';
-import { InitialForm } from './initial-form';
-import { FollowUpQuestions } from './follow-up-questions';
-import { PreviewOverview } from './preview-overview';
+import { InitialForm } from './InitialForm';
+import { FollowUpQuestions } from './FollowUpQuestions';
+import { PreviewOverview } from './PreviewOverview';
 import { FormProgress } from './FormProgress';
 
 export const ProjectForm = () => {

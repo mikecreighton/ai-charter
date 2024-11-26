@@ -1,5 +1,5 @@
 import { DocumentType, DocumentGenerationResponse, GeneratedDocument, DocumentGenerationState } from '@/types/documents';
-import { llmService } from './llm-service';
+import { llmService } from './LLMService';
 
 export class DocumentGenerator {
   private static readonly MAX_RETRIES = 3;
