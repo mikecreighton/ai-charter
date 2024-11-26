@@ -16,7 +16,7 @@ import {
 import { llmService } from '@/services/LLMService';
 import type { InitialAnalysisResponse, ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
-import { useDocuments } from '@/contexts/DocumentContext';
+import { useDocuments } from '@/contexts/document';
 import { DocumentGenerator } from '@/services/DocumentGenerator';
 import { useState } from 'react';
 import { mockComplexInitialAnalysisResponse, mockInitialFormData } from "@/mock/form-data";

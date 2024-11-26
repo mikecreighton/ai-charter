@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { useForm } from '@/hooks/use-form'
-import { useDocuments } from '@/contexts/DocumentContext'
+import { useDocuments } from '@/contexts/document';
 
 interface MainLayoutProps {
   children: ReactNode
@@ -9,16 +9,11 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { resetForm } = useForm();
-  const { state, completeGeneration } = useDocuments();
+  const { resetDocuments } = useDocuments();
 
   const handleReset = () => {
-    // Reset form state and local storage
     resetForm();
-    
-    // Reset all documents to initial state
-    Object.keys(state.documents).forEach(docType => {
-      completeGeneration(docType as any, '');
-    });
+    resetDocuments();
   };
 
   return (

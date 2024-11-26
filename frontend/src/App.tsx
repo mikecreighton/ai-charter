@@ -1,7 +1,7 @@
 import { MainLayout } from '@/components/layout/MainLayout'
 import { ProjectForm } from '@/components/form/ProjectForm'
 import { FormProvider } from '@/contexts/FormProvider'
-import { DocumentProvider } from '@/contexts/DocumentContext'
+import { DocumentProvider } from '@/contexts/document'
 import './App.css'
 
 export default function App() {

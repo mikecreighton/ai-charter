@@ -1,5 +1,7 @@
 import { config } from '@/config';
 import { InitialAnalysisResponse, FollowUpQuestion } from '@/types/form';
+import { DocumentType } from '@/types/documents';
+import { ProjectFormData } from '@/types/form';
 
 export interface GenerateOverviewResponse {
   overview: string;
@@ -12,6 +14,38 @@ export interface OverviewSubmission {
   followUpQuestions?: FollowUpQuestion[];
   followUpResponses?: Record<string, string>;
 }
+
+interface GenerateDocumentParams {
+  documentType: DocumentType;
+  formData: ProjectFormData;
+  previousDocuments: Record<string, string>;
+}
+
+export const generateDocument = async ({
+  documentType,
+  formData,
+  previousDocuments
+}: GenerateDocumentParams): Promise<string> => {
+  const response = await fetch('/api/generate-document', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      documentType,
+      formData,
+      previousDocuments
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to generate document');
+  }
+
+  const data = await response.json();
+  return data.content;
+};
 
 class LLMService {
   async processInitialInput(

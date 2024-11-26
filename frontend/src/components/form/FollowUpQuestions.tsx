@@ -15,8 +15,9 @@ import {
 import { useForm as useFormContext } from '@/hooks/use-form';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { mockFollowUpFormData } from '@/mock/form-data';
-import { useDocuments } from '@/contexts/DocumentContext';
+import { useDocuments } from '@/contexts/document';
 import { DocumentGenerator } from '@/services/DocumentGenerator';
+import { DocumentGenerationState } from '@/types/documents';
 
 // Create a dynamic schema based on the questions
 const createFollowUpSchema = (questions: Array<{ id: string }>) => {
@@ -74,17 +75,20 @@ export const FollowUpQuestions = () => {
       });
       
       startGeneration('overview');
+
+      const generationState: DocumentGenerationState = {
+        formData: {
+          projectName: formData.projectName!,
+          description: formData.description!,
+          followUpResponses: localData,
+        },
+        analysis: analysis!,
+        followUpQuestions,
+      };
       
       const generationResult = await DocumentGenerator.generateDocument(
         'overview',
-        {
-          formData: {
-            ...formData,
-            followUpResponses: localData,
-          },
-          analysis: analysis!,
-          followUpQuestions,
-        },
+        generationState,
         documentState.documents
       );
 
