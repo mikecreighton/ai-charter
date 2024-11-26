@@ -29,15 +29,9 @@ flowchart TD
         
         PRD[Generate PRD] --> ShowPRD[Show preview]
         ShowPRD --> ConfirmPRD{User confirms?}
-        ConfirmPRD -->|Yes| UXDocs
+        ConfirmPRD -->|Yes| TechStack
         ConfirmPRD -->|Edit| EditPRD[Edit PRD]
         EditPRD --> ShowPRD
-        
-        UXDocs[Generate UX diagrams] --> ShowUX[Show preview]
-        ShowUX --> ConfirmUX{User confirms?}
-        ConfirmUX -->|Yes| TechStack
-        ConfirmUX -->|Edit| EditUX[Edit UX docs]
-        EditUX --> ShowUX
         
         TechStack[Generate tech stack] --> ShowTech[Show preview]
         ShowTech --> ConfirmTech{User confirms?}
@@ -47,9 +41,15 @@ flowchart TD
         
         CodeRules[Generate code rules] --> ShowRules[Show preview]
         ShowRules --> ConfirmRules{User confirms?}
-        ConfirmRules -->|Yes| Complete
+        ConfirmRules -->|Yes| DevelopmentPlan
         ConfirmRules -->|Edit| EditRules[Edit code rules]
         EditRules --> ShowRules
+
+        DevelopmentPlan[Generate development plan] --> ShowPlan[Show preview]
+        ShowPlan --> ConfirmPlan{User confirms?}
+        ConfirmPlan -->|Yes| Complete
+        ConfirmPlan -->|Edit| EditPlan[Edit development plan]
+        EditPlan --> ShowPlan
     end
     
     subgraph Export["Export Phase"]

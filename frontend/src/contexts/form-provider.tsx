@@ -1,144 +1,165 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useReducer, useEffect } from 'react';
 import { ProjectFormData, FollowUpQuestion, FormContextState, InitialAnalysisResponse } from '@/types/form';
 import { FormContext } from './form-context';
 
 const STORAGE_KEY = 'ai-charter-form-state';
 
-interface SavedState {
+const loadSavedState = (): Partial<FormState> => {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse saved state:', e);
+    }
+  }
+  return {};
+};
+
+const initialState: FormState = {
+  formData: {
+    projectName: '',
+    description: '',
+    followUpResponses: {},
+  },
+  currentStep: 'initial',
+  followUpQuestions: [],
+  isProcessing: false,
+};
+
+type FormAction = 
+  | { type: 'UPDATE_FORM_DATA'; payload: Partial<ProjectFormData> }
+  | { type: 'SET_ANALYSIS'; payload: { analysis: string; response: InitialAnalysisResponse } }
+  | { type: 'SET_FOLLOW_UPS'; payload: FollowUpQuestion[] }
+  | { type: 'SET_STEP'; payload: FormContextState['currentStep'] }
+  | { type: 'SET_PROCESSING'; payload: boolean }
+  | { type: 'SET_OVERVIEW'; payload: string }
+  | { type: 'RESET' };
+
+type FormState = {
   formData: ProjectFormData;
   currentStep: FormContextState['currentStep'];
   analysis?: string;
-  overview?: string;
-  followUpQuestions: FollowUpQuestion[];
   initialResponse?: InitialAnalysisResponse;
+  followUpQuestions: FollowUpQuestion[];
+  overview?: string;
+  isProcessing: boolean;
+};
+
+function formReducer(state: FormState, action: FormAction): FormState {
+  switch (action.type) {
+    case 'UPDATE_FORM_DATA':
+      return {
+        ...state,
+        formData: {
+          ...state.formData,
+          ...action.payload,
+          followUpResponses: {
+            ...state.formData.followUpResponses,
+            ...(action.payload.followUpResponses || {})
+          }
+        }
+      };
+    
+    case 'SET_ANALYSIS':
+      return {
+        ...state,
+        analysis: action.payload.analysis,
+        initialResponse: action.payload.response
+      };
+    
+    case 'SET_FOLLOW_UPS':
+      return {
+        ...state,
+        followUpQuestions: action.payload,
+        currentStep: 'followUp'
+      };
+    
+    case 'SET_STEP':
+      // Validate step transitions
+      if (action.payload === 'followUp' && 
+          (!state.formData.projectName || !state.formData.description)) {
+        return state;
+      }
+      if (action.payload === 'preview' && 
+          (!state.analysis || state.currentStep !== 'followUp')) {
+        return state;
+      }
+      return {
+        ...state,
+        currentStep: action.payload
+      };
+    
+    case 'SET_PROCESSING':
+      return {
+        ...state,
+        isProcessing: action.payload
+      };
+    
+    case 'SET_OVERVIEW':
+      return {
+        ...state,
+        overview: action.payload
+      };
+    
+    case 'RESET':
+      return initialState;
+    
+    default:
+      return state;
+  }
 }
 
 export function FormProvider({ children }: { children: ReactNode }) {
-  const loadSavedState = (): Partial<SavedState> => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved state:', e);
-      }
-    }
-    return {};
-  };
-
   const savedState = loadSavedState();
-
-  const [formData, setFormData] = useState<ProjectFormData>(() => 
-    savedState.formData || {
-      projectName: '',
-      description: '',
-      followUpResponses: {},
-    }
-  );
-
-  const [followUpQuestions, setFollowUpQuestions] = useState<FollowUpQuestion[]>(() => 
-    savedState.followUpQuestions || []
-  );
-
-  const [currentStep, setCurrentStep] = useState<FormContextState['currentStep']>(() => {
-    const step = savedState.currentStep;
-    const validSteps: FormContextState['currentStep'][] = ['initial', 'followUp', 'preview'];
-    
-    if (step && validSteps.includes(step)) {
-      if (step === 'followUp' && (!savedState.formData?.projectName || !savedState.formData?.description)) {
-        return 'initial';
-      }
-      if (step === 'preview' && !savedState.analysis) {
-        return 'followUp';
-      }
-      return step;
-    }
-    return 'initial';
+  const [state, dispatch] = useReducer(formReducer, {
+    ...initialState,
+    ...savedState,
   });
-
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [analysis, setAnalysis] = useState<string | undefined>(() => savedState.analysis);
-  const [initialResponse, setInitialResponse] = useState<InitialAnalysisResponse | undefined>(() => 
-    savedState.initialResponse
-  );
-  const [overview, setOverview] = useState<string | undefined>(() => savedState.overview);
-
+  
+  // Save to localStorage whenever state changes
   useEffect(() => {
-    const stateToSave: SavedState = {
-      formData,
-      currentStep,
-      analysis,
-      overview,
-      followUpQuestions,
-      initialResponse,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [formData, currentStep, analysis, overview, followUpQuestions, initialResponse]);
-
-  const updateFormData = (data: Partial<ProjectFormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
-
-  const updateFollowUpResponse = (id: string, response: string) => {
-    setFormData(prev => ({
-      ...prev,
-      followUpResponses: {
-        ...prev.followUpResponses,
-        [id]: response,
-      },
-    }));
-  };
-
-  const setFollowUps = (questions: FollowUpQuestion[]) => {
-    setFollowUpQuestions(questions);
-  };
-
-  const setStep = async (newStep: FormContextState['currentStep']) => {
-    if (newStep === 'followUp' && (!formData.projectName || !formData.description)) {
-      console.error('Cannot proceed: Initial form data incomplete');
-      return false;
-    }
-
-    if (newStep === 'preview' && (!analysis || currentStep !== 'followUp')) {
-      console.error('Cannot proceed: Follow-up answers incomplete');
-      return false;
-    }
-
-    setCurrentStep(newStep);
-    return true;
-  };
-
-  const resetForm = () => {
-    setFormData({
-      projectName: '',
-      description: '',
-      followUpResponses: {},
-    });
-    setFollowUpQuestions([]);
-    setCurrentStep('initial');
-    setAnalysis(undefined);
-    setInitialResponse(undefined);
-    setOverview(undefined);
-    localStorage.removeItem(STORAGE_KEY);
-  };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
 
   const value = {
-    formData,
-    followUpQuestions,
-    currentStep,
-    isProcessing,
-    initialResponse,
-    analysis,
-    overview,
-    updateFormData,
-    updateFollowUpResponse,
-    setStep,
-    setFollowUps,
-    setProcessing: setIsProcessing,
-    setInitialResponse,
-    setAnalysis,
-    setOverview,
-    resetForm,
+    ...state,
+    updateFormData: (data: Partial<ProjectFormData>) => {
+      dispatch({ type: 'UPDATE_FORM_DATA', payload: data });
+    },
+    setAnalysisAndResponse: (analysis: string, response: InitialAnalysisResponse) => {
+      dispatch({ type: 'SET_ANALYSIS', payload: { analysis, response } });
+    },
+    setFollowUps: (questions: FollowUpQuestion[]) => {
+      dispatch({ type: 'SET_FOLLOW_UPS', payload: questions });
+    },
+    setStep: (step: FormContextState['currentStep']) => {
+      dispatch({ type: 'SET_STEP', payload: step });
+      return true;
+    },
+    setProcessing: (isProcessing: boolean) => {
+      dispatch({ type: 'SET_PROCESSING', payload: isProcessing });
+    },
+    setAnalysis: (analysis: string) => {
+      dispatch({ type: 'SET_ANALYSIS', payload: { analysis, response: state.initialResponse! } });
+    },
+    setInitialResponse: (response: InitialAnalysisResponse) => {
+      if (state.analysis) {
+        dispatch({ type: 'SET_ANALYSIS', payload: { analysis: state.analysis, response } });
+      }
+    },
+    updateFollowUpResponse: (id: string, response: string) => {
+      dispatch({ 
+        type: 'UPDATE_FORM_DATA', 
+        payload: { 
+          followUpResponses: { ...state.formData.followUpResponses, [id]: response } 
+        } 
+      });
+    },
+    resetForm: () => dispatch({ type: 'RESET' }),
+    setOverview: (overview: string) => {
+      dispatch({ type: 'SET_OVERVIEW', payload: overview });
+    },
   };
 
   return <FormContext.Provider value={value}>{children}</FormContext.Provider>;

@@ -21,20 +21,21 @@ export type FormStep = 'initial' | 'followUp' | 'preview';
 export interface FormContextState {
   formData: ProjectFormData;
   followUpQuestions: FollowUpQuestion[];
-  currentStep: FormStep;
+  currentStep: 'initial' | 'followUp' | 'preview';
   isProcessing: boolean;
-  initialResponse?: InitialAnalysisResponse;
   analysis?: string;
   overview?: string;
+  initialResponse?: InitialAnalysisResponse;
   
   // Methods
   updateFormData: (data: Partial<ProjectFormData>) => void;
   updateFollowUpResponse: (id: string, response: string) => void;
-  setStep: (step: FormStep) => Promise<boolean>;
+  setStep: (step: 'initial' | 'followUp' | 'preview') => boolean;
   setFollowUps: (questions: FollowUpQuestion[]) => void;
   setProcessing: (isProcessing: boolean) => void;
-  setInitialResponse: (response: InitialAnalysisResponse) => void;
   setAnalysis: (analysis: string) => void;
+  setInitialResponse: (response: InitialAnalysisResponse) => void;
   setOverview: (overview: string) => void;
   resetForm: () => void;
+  setAnalysisAndResponse: (analysis: string, response: InitialAnalysisResponse) => void;
 } 

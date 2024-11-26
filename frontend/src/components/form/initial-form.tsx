@@ -13,22 +13,25 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { processInitialInput, generateOverview } from '@/services/llm-service';
+import { llmService } from '@/services/llm-service';
 import type { InitialAnalysisResponse, ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
-import { mockInitialFormData, mockComplexInitialAnalysisResponse, mockSimpleInitialAnalysisResponse } from '@/mock/form-data';
+import { useDocuments } from '@/contexts/DocumentContext';
+import { DocumentGenerator } from '@/services/document-generator';
+import { useState } from 'react';
+import { mockComplexInitialAnalysisResponse, mockInitialFormData } from "@/mock/form-data";
 
 export const InitialForm = () => {
   const { 
     updateFormData, 
     setStep, 
     setFollowUps, 
-    setProcessing, 
-    setAnalysis, 
+    setAnalysisAndResponse,
     formData,
-    setInitialResponse,
-    setOverview
   } = useFormContext();
+
+  const { startGeneration, completeGeneration, state: documentState } = useDocuments();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useHookForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
@@ -38,71 +41,67 @@ export const InitialForm = () => {
     },
   });
 
-  const onSubmit = async (data: ProjectFormData) => {
-    try {
-      setProcessing(true);
+  const onSubmit = form.handleSubmit(async (data) => {
+    setIsLoading(true);
 
-      const USE_MOCK_DATA = false;
-      // For testing cases where the LLM does not come back with follow-up questions
-      // Simple = no follow-up questions
-      const USE_SIMPLE_MOCK_DATA = false;
+    const USE_MOCK_DATA = true;
+
+    try {
       let result: InitialAnalysisResponse;
 
       if (USE_MOCK_DATA) {
-        updateFormData(mockInitialFormData);
-        // Need to manually update it here since React state updates are async.
-        data.projectName = mockInitialFormData.projectName;
-        data.description = mockInitialFormData.description;
-        if (USE_SIMPLE_MOCK_DATA) {
-          result = mockSimpleInitialAnalysisResponse;
-        } else {
-          result = mockComplexInitialAnalysisResponse;
-        }
-
+        data = mockInitialFormData;
+        result = mockComplexInitialAnalysisResponse;
       } else {
-        updateFormData(data);
-        // Get initial analysis
-        result = await processInitialInput(
+        result = await llmService.processInitialInput(
           data.projectName,
           data.description
         );
-        console.log('Initial analysis result:', result);
       }
       
-      if (result.analysis) {
-        setAnalysis(result.analysis);
-        setInitialResponse(result);
+      if (!result?.analysis) {
+        throw new Error('Invalid response from analysis');
       }
+
+      updateFormData(data);
+      setAnalysisAndResponse(result.analysis, result);
 
       if (result.needsFollowUp && result.followUpQuestions) {
         setFollowUps(result.followUpQuestions);
-        setStep('followUp');
       } else {
-        // No follow-ups needed, generate overview directly
-        console.log('No follow-ups needed, generating overview...');
-        const overviewResult = await generateOverview({
-          projectName: data.projectName,
-          description: data.description,
-          analysis: result.analysis,
-        });
-        
-        console.log('Overview generated:', overviewResult);
-        setOverview(overviewResult.overview);
-        setStep('preview');
+        startGeneration('overview');
+        const generationResult = await DocumentGenerator.generateDocument(
+          'overview',
+          {
+            formData: {
+              ...data,
+              followUpResponses: {},
+            },
+            analysis: result.analysis,
+            followUpQuestions: [],
+          },
+          documentState.documents
+        );
+
+        if (generationResult.success && generationResult.content) {
+          completeGeneration('overview', generationResult.content);
+          setStep('preview');
+        } else {
+          throw new Error(generationResult.error || 'Failed to generate overview');
+        }
       }
-      
-    } catch (err) {
+    } catch (error) {
       form.setError("root", { 
-        message: err instanceof Error ? err.message : "Something went wrong" 
+        message: error instanceof Error ? error.message : "Something went wrong" 
       });
     } finally {
-      setProcessing(false);
+      setIsLoading(false);
     }
-  };
+  });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6">
         <FormField
           control={form.control}
           name="projectName"
@@ -136,16 +135,24 @@ export const InitialForm = () => {
         />
 
         {form.formState.errors.root && (
-          <div className="text-red-500 text-sm">{form.formState.errors.root.message}</div>
+          <div className="text-red-500 text-sm">
+            {form.formState.errors.root.message}
+          </div>
         )}
 
         <Button 
           type="submit" 
-          disabled={form.formState.isSubmitting}
+          disabled={isLoading}
           className="w-full"
         >
-          {form.formState.isSubmitting && <LoadingSpinner />}
-          {form.formState.isSubmitting ? "Processing..." : "Submit Description"}
+          {isLoading ? (
+            <>
+              <LoadingSpinner />
+              <span className="ml-2">Processing...</span>
+            </>
+          ) : (
+            "Submit Description"
+          )}
         </Button>
       </form>
     </Form>

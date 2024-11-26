@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { generateOverview } from '@/services/llm-service';
 import { mockFollowUpFormData } from '@/mock/form-data';
+import { useDocuments } from '@/contexts/DocumentContext';
+import { DocumentGenerator } from '@/services/document-generator';
 
 // Create a dynamic schema based on the questions
 const createFollowUpSchema = (questions: Array<{ id: string }>) => {
@@ -36,8 +37,9 @@ export const FollowUpQuestions = () => {
     setProcessing,
     formData,
     analysis,
-    setOverview,
   } = useFormContext();
+
+  const { startGeneration, completeGeneration, setError: setDocError, state: documentState } = useDocuments();
 
   const form = useHookForm({
     resolver: zodResolver(createFollowUpSchema(followUpQuestions)),
@@ -57,13 +59,11 @@ export const FollowUpQuestions = () => {
       setProcessing(true);
 
       let localData: Record<string, string>;
-
       const USE_MOCK_DATA = false;
 
       if (USE_MOCK_DATA) {
         localData = mockFollowUpFormData.followUpResponses || {};
       } else {
-        // Update responses in context
         localData = JSON.parse(JSON.stringify(data));
       }
 
@@ -73,17 +73,30 @@ export const FollowUpQuestions = () => {
         }
       });
       
-      const overviewResult = await generateOverview({
-        projectName: formData.projectName,
-        description: formData.description,
-        analysis: analysis!,
-        followUpQuestions,
-        followUpResponses: localData,
-      });
-      console.log('Overview generated:', overviewResult);
+      startGeneration('overview');
       
-      setOverview(overviewResult.overview);
-      setStep('preview');
+      const generationResult = await DocumentGenerator.generateDocument(
+        'overview',
+        {
+          formData: {
+            ...formData,
+            followUpResponses: localData,
+          },
+          analysis: analysis!,
+          followUpQuestions,
+        },
+        documentState.documents
+      );
+
+      if (generationResult.success && generationResult.content) {
+        completeGeneration('overview', generationResult.content);
+        setStep('preview');
+      } else {
+        setDocError('overview', generationResult.error || 'Failed to generate overview');
+        form.setError("root", { 
+          message: generationResult.error || "Failed to generate overview" 
+        });
+      }
     } catch (err) {
       form.setError("root", {
         message: err instanceof Error ? err.message : "Something went wrong"
