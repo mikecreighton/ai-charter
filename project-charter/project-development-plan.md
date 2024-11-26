@@ -64,30 +64,26 @@
 ## Phase 3: Document Generation Core
 
 ### 3.1 Base Generation System
-- [ ] Create document type definitions
-- [ ] Implement base document generator class
-- [ ] Add markdown sanitization
-- [ ] Implement retry logic for generation failures
+- [x] Create document type definitions
+- [x] Implement base document generator class
+- [x] Add markdown sanitization
+- [x] Implement retry logic for generation failures
 
-### 3.2 Individual Document Generators
+### 3.2 Preview System
+- [ ] Create preview layout components
+- [ ] Implement markdown preview
+  - Add toggle between raw/rendered markdown
+  - Implement live preview updates
+- [ ] Implement document editing
+  - Add Shadcn/ui Textarea for raw markdown editing
+  - Implement save functionality for edited content
+
+### 3.3 Individual Document Generators
 - [x] Project Overview generator
 - [ ] PRD generator
 - [ ] UX Flow diagram generator
 - [ ] Tech Stack specification generator
 - [ ] Code Rules generator
-
-### 3.3 Preview System
-- [ ] Create preview layout components
-- [ ] Implement markdown preview
-  - Add toggle between raw/rendered markdown
-  - Implement live preview updates
-  - Add basic markdown editor
-- [ ] Implement document editing
-  - Add textarea for raw markdown editing
-  - Implement save functionality for edited content
-- [ ] Add mermaid diagram preview (Nice to have)
-  - Add toggle between raw/rendered diagram
-  - Implement live preview updates
 
 ## Phase 4: Export System and Polish
 

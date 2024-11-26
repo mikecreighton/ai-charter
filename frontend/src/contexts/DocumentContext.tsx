@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { DocumentType, GeneratedDocument } from '@/types/documents';
 
 interface DocumentState {
@@ -15,15 +15,31 @@ const initialState: DocumentState = {
   }
 };
 
+const STORAGE_KEY = 'ai-charter-documents';
+
+function loadInitialState(): DocumentState {
+  try {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+  } catch (error) {
+    console.error('Error loading documents from localStorage:', error);
+  }
+  return initialState;
+}
+
 type DocumentAction = 
   | { type: 'START_GENERATION'; documentType: DocumentType }
   | { type: 'GENERATION_COMPLETE'; documentType: DocumentType; content: string }
   | { type: 'GENERATION_ERROR'; documentType: DocumentType; error: string };
 
 function documentReducer(state: DocumentState, action: DocumentAction): DocumentState {
+  let newState: DocumentState;
+  
   switch (action.type) {
     case 'START_GENERATION':
-      return {
+      newState = {
         ...state,
         documents: {
           ...state.documents,
@@ -33,8 +49,10 @@ function documentReducer(state: DocumentState, action: DocumentAction): Document
           }
         }
       };
+      break;
+      
     case 'GENERATION_COMPLETE':
-      return {
+      newState = {
         ...state,
         documents: {
           ...state.documents,
@@ -45,8 +63,10 @@ function documentReducer(state: DocumentState, action: DocumentAction): Document
           }
         }
       };
+      break;
+      
     case 'GENERATION_ERROR':
-      return {
+      newState = {
         ...state,
         documents: {
           ...state.documents,
@@ -57,9 +77,19 @@ function documentReducer(state: DocumentState, action: DocumentAction): Document
           }
         }
       };
+      break;
+      
     default:
       return state;
   }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+  } catch (error) {
+    console.error('Error saving documents to localStorage:', error);
+  }
+
+  return newState;
 }
 
 const DocumentContext = createContext<{
@@ -70,7 +100,15 @@ const DocumentContext = createContext<{
 } | null>(null);
 
 export function DocumentProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(documentReducer, initialState);
+  const [state, dispatch] = useReducer(documentReducer, loadInitialState());
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Error saving documents to localStorage:', error);
+    }
+  }, [state]);
 
   const startGeneration = (type: DocumentType) => {
     dispatch({ type: 'START_GENERATION', documentType: type });

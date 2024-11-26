@@ -19,7 +19,6 @@ Secondary Metrics:
 - As a developer, I want to input my project's technical requirements so that my AI assistant understands my tech stack and constraints
 - As a developer, I want to define code style preferences so that AI-generated code matches my project's conventions
 - As a developer, I want to specify project architecture patterns so that AI suggestions align with my project's structure
-- As a developer, I want to define UX flow diagrams using Mermaid syntax so that my AI assistant can understand project's user flows
 - As a developer, I want to export documentation in a format my IDE can understand so that I can immediately start using it
 - As a developer, I want to easily update project preferences when they change so that my AI assistant stays aligned with current requirements
 
@@ -39,11 +38,10 @@ Secondary Metrics:
 - Description: Generates comprehensive documentation based on user inputs, creating multiple document types for different aspects of the project
 - Acceptance Criteria:
   - Generates high-level project overview
-  - Generates technical stack documentation
   - Generates PRD (Product Requirements Document)
-  - Generates code style guidelines
-  - Generates UX flow diagrams
-  - Generates architecture patterns documentation
+  - Generates technical stack documentation
+  - Generates code rules guidelines
+  - Generates development plan
   - Output is consistently formatted and complete
 
 ### Export Functionality

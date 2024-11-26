@@ -81,8 +81,7 @@ function formReducer(state: FormState, action: FormAction): FormState {
           (!state.formData.projectName || !state.formData.description)) {
         return state;
       }
-      if (action.payload === 'preview' && 
-          (!state.analysis || state.currentStep !== 'followUp')) {
+      if (action.payload === 'preview' && !state.analysis) {
         return state;
       }
       return {

@@ -1,8 +1,10 @@
+import { useDocuments } from '@/contexts/DocumentContext';
 import { useForm } from '@/hooks/use-form';
 import { FormContextState } from '@/types/form';
 
 export const FormProgress = () => {
   const { currentStep, formData, analysis, setStep } = useForm();
+  const { state: documentState } = useDocuments();
   
   const steps = [
     { id: 'initial', label: 'Project Description' },
@@ -11,16 +13,19 @@ export const FormProgress = () => {
   ];
 
   const canAccessStep = (stepId: string) => {
+    let isAccessible = false;
     switch (stepId) {
       case 'initial':
-        return true; // Always accessible
+        isAccessible = true;
+        break;
       case 'followUp':
-        return formData.projectName && formData.description;
+        isAccessible = Boolean(formData.projectName && formData.description);
+        break;
       case 'preview':
-        return formData.projectName && formData.description && analysis;
-      default:
-        return false;
+        isAccessible = documentState.documents.overview.status === 'complete';
+        break;
     }
+    return isAccessible;
   };
 
   const handleStepClick = async (stepId: string) => {

@@ -9,10 +9,9 @@ The application is a specialized tool designed to help developers create compreh
 - Multiple document generation capabilities:
   * High-level project overview
   * Formal PRD (Product Requirements Document)
-  * UX Flow Diagrams (in Mermaid format)
   * Technical stack specification
   * Code style and documentation guidelines
-  * Feature roadmap and development steps
+  * Feature roadmap and development plan
 - Individual document download functionality
 - Context-aware project analysis
 - Tech stack preference capture

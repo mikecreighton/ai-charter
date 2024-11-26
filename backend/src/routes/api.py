@@ -237,11 +237,18 @@ async def generate_document(request: GenerateDocumentRequest):
             print(content + "\n")
             return {"success": True, "content": content}
 
-        # TODO: Handle other document types (PRD, TechStack, etc.)
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Document type {request.type} not yet implemented"
-            )
+        # TODO: Implement other document types (PRD, TechStack, etc.)
+        elif isinstance(request, PrdRequest):
+            return {"success": True, "content": "PRD content"}
+
+        elif isinstance(request, TechStackRequest):
+            return {"success": True, "content": "Tech Stack content"}
+
+        elif isinstance(request, CodeRulesRequest):
+            return {"success": True, "content": "Code Rules content"}
+
+        elif isinstance(request, DevelopmentPlanRequest):
+            return {"success": True, "content": "Development Plan content"}
 
     except Exception as e:
         return {"success": False, "error": str(e)}

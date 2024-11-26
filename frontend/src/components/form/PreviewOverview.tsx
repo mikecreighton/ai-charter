@@ -1,12 +1,17 @@
 import { useForm as useFormContext } from '@/hooks/use-form';
-import { Button } from '@/components/ui/button';
+import { useDocuments } from '@/contexts/DocumentContext';
 
 export const PreviewOverview = () => {
-  const { overview, formData, setStep } = useFormContext();
+  const { formData } = useFormContext();
+  const { state: documentState } = useDocuments();
 
-  if (!overview) {
-    setStep('initial');
-    return null;
+  if (documentState.documents.overview.status !== 'complete') {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Loading Preview...</h2>
+        <p>Please wait while we generate the document preview.</p>
+      </div>
+    );
   }
 
   return (
@@ -19,20 +24,9 @@ export const PreviewOverview = () => {
       <div className="prose prose-neutral dark:prose-invert max-w-none">
         <div 
           dangerouslySetInnerHTML={{ 
-            __html: overview.replace(/\n/g, '<br />') 
+            __html: documentState.documents.overview.content.replace(/\n/g, '<br />') 
           }} 
         />
-      </div>
-
-      <div className="flex gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setStep('initial')}
-        >
-          Start Over
-        </Button>
-        {/* Add more actions here like downloading or editing */}
       </div>
     </div>
   );
