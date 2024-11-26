@@ -35,6 +35,7 @@ export const FollowUpQuestions = () => {
     setProcessing,
     formData,
     analysis,
+    setOverview,
   } = useFormContext();
 
   const form = useHookForm({
@@ -72,7 +73,7 @@ export const FollowUpQuestions = () => {
 
       console.log('Overview generated:', overviewResult);
       
-      // Move to preview step
+      setOverview(overviewResult.overview);
       setStep('preview');
     } catch (err) {
       form.setError("root", {

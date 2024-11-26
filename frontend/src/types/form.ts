@@ -23,6 +23,7 @@ export interface FormContextState {
   isProcessing: boolean;
   initialResponse?: InitialAnalysisResponse;
   analysis?: string;
+  overview?: string;
   updateFormData: (data: Partial<ProjectFormData>) => void;
   updateFollowUpResponse: (id: string, response: string) => void;
   setStep: (step: FormContextState['currentStep']) => void;
@@ -30,4 +31,5 @@ export interface FormContextState {
   setProcessing: (processing: boolean) => void;
   setInitialResponse: (response: InitialAnalysisResponse) => void;
   setAnalysis: (analysis: string) => void;
+  setOverview: (overview: string) => void;
 } 

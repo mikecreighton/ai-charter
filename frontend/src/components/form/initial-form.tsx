@@ -25,7 +25,8 @@ export const InitialForm = () => {
     setProcessing, 
     setAnalysis, 
     formData,
-    setInitialResponse 
+    setInitialResponse,
+    setOverview
   } = useFormContext();
 
   const form = useHookForm<ProjectFormData>({
@@ -67,6 +68,7 @@ export const InitialForm = () => {
         });
         
         console.log('Overview generated:', overviewResult);
+        setOverview(overviewResult.overview);
         setStep('preview');
       }
       
