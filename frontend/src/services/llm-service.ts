@@ -33,7 +33,7 @@ export interface OverviewSubmission {
   description: string;
   initialAnalysis: string;
   followUpQuestions?: FollowUpQuestion[];
-  responses?: Record<string, string>;
+  followUpResponses?: Record<string, string>;
 }
 
 export async function generateOverview(data: OverviewSubmission): Promise<GenerateOverviewResponse> {

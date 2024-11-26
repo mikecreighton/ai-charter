@@ -50,7 +50,7 @@ class GenerateOverviewRequest(BaseModel):
     description: str
     initialAnalysis: str
     followUpQuestions: Optional[List[FollowUpQuestion]] = None
-    responses: Optional[dict[str, str]] = None
+    followUpResponses: Optional[dict[str, str]] = None
 
 
 def get_provider():

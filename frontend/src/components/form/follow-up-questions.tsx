@@ -78,7 +78,7 @@ export const FollowUpQuestions = () => {
         description: formData.description,
         initialAnalysis: analysis!,
         followUpQuestions,
-        responses: localData,
+        followUpResponses: localData,
       });
       console.log('Overview generated:', overviewResult);
       
