@@ -62,13 +62,15 @@ export const FollowUpQuestions = () => {
       });
 
       // Submit everything to the API
-      await generateOverview({
+      const overviewResult = await generateOverview({
         projectName: formData.projectName,
         description: formData.description,
         initialAnalysis: analysis!,
         followUpQuestions,
         responses: data,
       });
+
+      console.log('Overview generated:', overviewResult);
       
       // Move to preview step
       setStep('preview');

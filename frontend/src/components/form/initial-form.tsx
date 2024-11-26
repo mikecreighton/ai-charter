@@ -13,12 +13,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { processInitialInput } from '@/services/llm-service';
+import { processInitialInput, generateOverview } from '@/services/llm-service';
 import type { ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
 
 export const InitialForm = () => {
-  const { updateFormData, setStep, setFollowUps, setProcessing, setAnalysis, formData } = useFormContext();
+  const { 
+    updateFormData, 
+    setStep, 
+    setFollowUps, 
+    setProcessing, 
+    setAnalysis, 
+    formData,
+    setInitialResponse 
+  } = useFormContext();
+
   const form = useHookForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
@@ -30,27 +39,35 @@ export const InitialForm = () => {
   const onSubmit = async (data: ProjectFormData) => {
     try {
       setProcessing(true);
-      console.log('Form submitted:', data);
       updateFormData(data);
       
+      // Get initial analysis
       const result = await processInitialInput(
         data.projectName,
         data.description
       );
 
-      console.log('Result:', result);
-
+      console.log('Initial analysis result:', result);
+      
+      if (result.analysis) {
+        setAnalysis(result.analysis);
+        setInitialResponse(result);
+      }
 
       if (result.needsFollowUp && result.followUpQuestions) {
         setFollowUps(result.followUpQuestions);
         setStep('followUp');
       } else {
-        // TODO: If we don't need a follow up, we should just generate the overview here.
+        // No follow-ups needed, generate overview directly
+        console.log('No follow-ups needed, generating overview...');
+        const overviewResult = await generateOverview({
+          projectName: data.projectName,
+          description: data.description,
+          initialAnalysis: result.analysis,
+        });
+        
+        console.log('Overview generated:', overviewResult);
         setStep('preview');
-      }
-      
-      if (result.analysis) {
-        setAnalysis(result.analysis);
       }
       
     } catch (err) {

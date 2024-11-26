@@ -145,7 +145,7 @@ async def generate_overview(request: GenerateOverviewRequest):
         # For now, just log what we received
         print("Received submission to generate an overview:")
         print(request)
-        return {"status": "received"}
+        return {"overview": "This will be the overview."}
 
     #         provider = get_provider()
 
