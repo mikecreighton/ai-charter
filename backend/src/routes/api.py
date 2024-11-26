@@ -1,17 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import AsyncGenerator, List, Optional
-from fastapi.responses import StreamingResponse
-from ..llm.openai_provider import OpenAIProvider
-from ..llm.anthropic_provider import AnthropicProvider
-from ..config import settings, LLMProvider
+from typing import List, Optional
 from ..llm.base import get_llm_client
 from ..llm.prompts.initial_analysis import (
     INITIAL_ANALYSIS_SYSTEM_PROMPT,
     INITIAL_ANALYSIS_USER_PROMPT,
 )
 import json
+from ..config import settings
+from ..llm.openai_provider import OpenAIProvider
+from ..llm.anthropic_provider import AnthropicProvider
+from ..config import LLMProvider
+from fastapi.responses import StreamingResponse
 
+# Create the router
 router = APIRouter()
 
 
@@ -30,7 +32,7 @@ class FollowUpQuestion(BaseModel):
 class ProcessInitialResponse(BaseModel):
     needsFollowUp: bool
     followUpQuestions: Optional[List[FollowUpQuestion]] = None
-    overview: Optional[str] = None
+    analysis: Optional[str] = None
 
 
 class ProjectInput(BaseModel):
@@ -99,7 +101,8 @@ async def test_validate_key():
 async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse:
     try:
         # Get LLM client
-        llm = get_llm_client()
+        provider = get_provider()
+        provider.set_system_message(INITIAL_ANALYSIS_SYSTEM_PROMPT)
 
         # Format prompt with project details
         prompt = INITIAL_ANALYSIS_USER_PROMPT.format(
@@ -107,12 +110,7 @@ async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse
         )
 
         # Get LLM response
-        response = await llm.create_chat_completion(
-            [
-                {"role": "system", "content": INITIAL_ANALYSIS_SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ]
-        )
+        response = await provider.generate(prompt, stream=False)
 
         # Parse LLM response
         try:

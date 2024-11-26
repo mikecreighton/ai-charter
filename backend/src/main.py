@@ -6,7 +6,7 @@ from .config import settings
 
 app = FastAPI(title="ai-charter API")
 
-app.include_router(api.router)
+app.include_router(api.router, prefix="/api")
 
 if not settings.get_active_api_key():
     print(f"Warning: No API key set for selected provider: {settings.llm_provider}")

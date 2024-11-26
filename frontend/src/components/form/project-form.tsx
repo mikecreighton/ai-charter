@@ -18,7 +18,7 @@ import { processInitialInput } from '@/services/llm-service';
 import type { ProjectFormData } from "@/types/form";
 
 export const ProjectForm = () => {
-  const { updateFormData, setStep } = useFormContext();
+  const { updateFormData, setStep, setFollowUps, setProcessing } = useFormContext();
   
   const form = useHookForm<ProjectFormData>({
     resolver: zodResolver(projectFormSchema),
@@ -30,6 +30,7 @@ export const ProjectForm = () => {
 
   const onSubmit = async (data: ProjectFormData) => {
     try {
+      setProcessing(true);
       console.log('Form submitted:', data);
       updateFormData(data);
       
@@ -38,7 +39,10 @@ export const ProjectForm = () => {
         data.description
       );
 
-      if (result.needsFollowUp) {
+      console.log('Result:', result);
+
+      if (result.needsFollowUp && result.followUpQuestions) {
+        setFollowUps(result.followUpQuestions);
         setStep('followUp');
       } else {
         setStep('preview');
@@ -48,6 +52,8 @@ export const ProjectForm = () => {
       form.setError("root", { 
         message: err instanceof Error ? err.message : "Something went wrong" 
       });
+    } finally {
+      setProcessing(false);
     }
   };
 

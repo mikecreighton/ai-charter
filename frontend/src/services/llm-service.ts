@@ -1,3 +1,5 @@
+import { config } from '@/config';
+
 export interface ProcessInitialInputResponse {
   needsFollowUp: boolean;
   followUpQuestions?: Array<{
@@ -5,11 +7,11 @@ export interface ProcessInitialInputResponse {
     question: string;
     suggestedAnswer?: string;
   }>;
-  overview?: string;
+  analysis?: string;
 }
 
 export async function processInitialInput(projectName: string, description: string): Promise<ProcessInitialInputResponse> {
-  const response = await fetch('/api/process-initial', {
+  const response = await fetch(`${config.apiUrl}/api/process-initial`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -21,7 +23,8 @@ export async function processInitialInput(projectName: string, description: stri
   });
 
   if (!response.ok) {
-    throw new Error('Failed to process project description');
+    const error = await response.json().catch(() => ({ detail: 'An unknown error occurred' }));
+    throw new Error(error.detail || 'Failed to process project description');
   }
 
   return response.json();
