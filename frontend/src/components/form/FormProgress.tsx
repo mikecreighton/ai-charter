@@ -3,7 +3,7 @@ import { useForm } from '@/hooks/use-form';
 import { FormContextState } from '@/types/form';
 
 export const FormProgress = () => {
-  const { currentStep, formData, analysis, setStep } = useForm();
+  const { currentStep, formData, setStep } = useForm();
   const { state: documentState } = useDocuments();
   
   const steps = [
