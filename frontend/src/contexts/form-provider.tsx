@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { ProjectFormData, FollowUpQuestion, FormContextState } from '@/types/form';
+import { ProjectFormData, FollowUpQuestion, FormContextState, InitialAnalysisResponse } from '@/types/form';
 import { FormContext } from './form-context';
 
 export function FormProvider({ children }: { children: ReactNode }) {
@@ -12,6 +12,7 @@ export function FormProvider({ children }: { children: ReactNode }) {
   const [currentStep, setCurrentStep] = useState<FormContextState['currentStep']>('initial');
   const [isProcessing, setIsProcessing] = useState(false);
   const [analysis, setAnalysis] = useState<string>();
+  const [initialResponse, setInitialResponse] = useState<InitialAnalysisResponse>();
 
   const updateFormData = (data: Partial<ProjectFormData>) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -36,12 +37,14 @@ export function FormProvider({ children }: { children: ReactNode }) {
     followUpQuestions,
     currentStep,
     isProcessing,
+    initialResponse,
+    analysis,
     updateFormData,
     updateFollowUpResponse,
     setStep: setCurrentStep,
     setFollowUps,
     setProcessing: setIsProcessing,
-    analysis,
+    setInitialResponse,
     setAnalysis,
   };
 

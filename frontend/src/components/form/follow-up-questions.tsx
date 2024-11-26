@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { submitFollowUpResponses } from '@/services/llm-service';
+import { generateOverview } from '@/services/llm-service';
 
 // Create a dynamic schema based on the questions
 const createFollowUpSchema = (questions: Array<{ id: string }>) => {
@@ -62,10 +62,10 @@ export const FollowUpQuestions = () => {
       });
 
       // Submit everything to the API
-      await submitFollowUpResponses({
+      await generateOverview({
         projectName: formData.projectName,
         description: formData.description,
-        initialAnalysis: analysis!, // We'll need to add this to the form context
+        initialAnalysis: analysis!,
         followUpQuestions,
         responses: data,
       });

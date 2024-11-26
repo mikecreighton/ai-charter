@@ -1,28 +1,14 @@
 import { config } from '@/config';
+import { InitialAnalysisResponse, FollowUpQuestion } from '@/types/form';
 
-export interface ProcessInitialInputResponse {
-  needsFollowUp: boolean;
-  followUpQuestions?: Array<{
-    id: string;
-    question: string;
-    suggestedAnswer?: string;
-  }>;
-  analysis?: string;
+export interface GenerateOverviewResponse {
+  overview: string;
 }
 
-export interface FollowUpSubmission {
-  projectName: string;
-  description: string;
-  initialAnalysis: string;
-  followUpQuestions: Array<{
-    id: string;
-    question: string;
-    suggestedAnswer?: string;
-  }>;
-  responses: Record<string, string>;
-}
-
-export async function processInitialInput(projectName: string, description: string): Promise<ProcessInitialInputResponse> {
+export async function processInitialInput(
+  projectName: string,
+  description: string
+): Promise<InitialAnalysisResponse> {
   const response = await fetch(`${config.apiUrl}/api/process-initial`, {
     method: 'POST',
     headers: {
@@ -42,8 +28,16 @@ export async function processInitialInput(projectName: string, description: stri
   return response.json();
 }
 
-export async function submitFollowUpResponses(data: FollowUpSubmission): Promise<any> {
-  const response = await fetch(`${config.apiUrl}/api/process-followup`, {
+export interface OverviewSubmission {
+  projectName: string;
+  description: string;
+  initialAnalysis: string;
+  followUpQuestions?: FollowUpQuestion[];
+  responses?: Record<string, string>;
+}
+
+export async function generateOverview(data: OverviewSubmission): Promise<GenerateOverviewResponse> {
+  const response = await fetch(`${config.apiUrl}/api/generate-overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -57,4 +51,4 @@ export async function submitFollowUpResponses(data: FollowUpSubmission): Promise
   }
 
   return response.json();
-} 
+}
