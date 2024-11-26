@@ -42,8 +42,8 @@
 - [x] Style form components using Tailwind
 
 ### 2.2 Dynamic Question Generation
-- [ ] Create prompt template for follow-up questions
-- [ ] Implement question generation API endpoint
+- [x] Create prompt template for follow-up questions
+- [x] Implement question generation API endpoint
 - [ ] Build UI components for dynamic questions
 - [ ] Add state management for question responses
 - [ ] Implement response validation
