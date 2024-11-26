@@ -1,5 +1,6 @@
 # ai-charter Development Plan
 
+
 ## Phase 0: .gitignore Setup
 
 - [x] Create a project-level .gitignore file to exclude node_modules and other unnecessary files relevant to the project's tech stack
@@ -49,19 +50,24 @@
 - [x] Implement response validation
 
 ### 2.3 Form State Management
-- [x] Set up React Context for global form state
-- [ ] Create form progression tracking
-- [ ] Implement save/restore functionality for session
-- [ ] Add form navigation controls
-- [ ] Create progress indicators
+- [ ] Implement form progression tracking
+  - Step 1: Project Description input
+  - Step 2: Follow-up Questions review/edit
+  - Step 3: Document Generation & Preview
+- [ ] Implement local storage persistence
+  - Save form state on key state changes
+  - Restore state on page refresh/reload
+- [ ] Add navigation controls (Back/Continue)
+  - Implement step transitions
+  - Validate required fields before progression
 
 ## Phase 3: Document Generation Core
 
 ### 3.1 Base Generation System
 - [ ] Create document type definitions
 - [ ] Implement base document generator class
-- [ ] Create document preview components
-- [ ] Implement basic error handling
+- [ ] Add markdown sanitization
+- [ ] Implement retry logic for generation failures
 
 ### 3.2 Individual Document Generators
 - [x] Project Overview generator
@@ -72,75 +78,57 @@
 
 ### 3.3 Preview System
 - [ ] Create preview layout components
-- [ ] Implement markdown rendering
-- [ ] Add mermaid diagram rendering
-- [ ] Create preview navigation
-- [ ] Add edit capabilities
+- [ ] Implement markdown preview
+  - Add toggle between raw/rendered markdown
+  - Implement live preview updates
+  - Add basic markdown editor
+- [ ] Implement document editing
+  - Add textarea for raw markdown editing
+  - Implement save functionality for edited content
+- [ ] Add mermaid diagram preview (Nice to have)
+  - Add toggle between raw/rendered diagram
+  - Implement live preview updates
 
 ## Phase 4: Export System and Polish
 
 ### 4.1 Export Functionality
 - [ ] Implement document selection interface
-- [ ] Create zip file generation
-- [ ] Add download handling
-- [ ] Implement export format options
+- [ ] Create file system operations
+  - Implement file writing
+  - Add basic error handling for file operations
+- [ ] Add download handling (create zip file of documents and allow user to download it in the browser)
 - [ ] Add export progress indicators
 
-### 4.2 Error Handling and Recovery
-- [ ] Implement comprehensive error boundaries
-- [ ] Add retry mechanisms for failed generations
+### 4.2 Error Handling
+- [ ] Implement error boundaries for UI components
+- [ ] Add retry logic for failed LLM generations
 - [ ] Create user-friendly error messages
-- [ ] Add error recovery flows
-- [ ] Implement session recovery
+- [ ] Implement markdown validation
 
-### 4.3 UI Polish and Performance
+### 4.3 UI Polish
 - [ ] Add loading states and animations
-- [ ] Implement responsive design adjustments
-- [ ] Add keyboard shortcuts
-- [ ] Optimize render performance
 - [ ] Add success/error notifications
 
-### 4.4 Testing and Documentation
-- [ ] Write unit tests for core functionality
-- [ ] Add integration tests for document generation
-- [ ] Create user documentation
-- [ ] Add developer documentation
-- [ ] Create setup guide
-
-## Phase 5: Alternative LLM Provider Integration
-
-### 5.1 Additional Providers
-- [ ] Implement Anthropic Claude integration
-- [ ] Add OpenRouter support
-- [ ] Integrate Google Gemini
-- [ ] Create provider selection interface
-- [ ] Add provider-specific configurations
-
-### 5.2 Provider-Specific Optimizations
-- [ ] Optimize prompts for each provider
-- [ ] Implement provider-specific retry logic
-- [ ] Add provider fallback mechanisms
-- [ ] Create provider performance monitoring
-- [ ] Optimize token usage per provider
+### 4.4 Documentation
+- [ ] Update project README.md
+  - Add project overview
+  - Document tech stack
+  - Include setup instructions
 
 ## Developer Notes
 
 ### Key Considerations
-- Start with OpenAI integration first, then expand to other providers
 - Use TypeScript interfaces shared between frontend and backend
 - Implement proper error handling from the start
 - Focus on user feedback and progressive enhancement
-- Build with scalability in mind
 
 ### Critical Path Dependencies
 1. Basic form must be functional before starting document generation
 2. Document preview system needed before implementing edit capabilities
-3. Core generation must work with one provider before adding others
-4. Export system requires all document types to be implemented
-5. Error handling should be implemented alongside each feature
+3. Export system requires all document types to be implemented
+4. Error handling should be implemented alongside each feature
 
 ### Quality Checkpoints
 - TypeScript compilation passes
 - ESLint shows no errors
 - Responsive design working
-- Cross-browser compatibility verified
