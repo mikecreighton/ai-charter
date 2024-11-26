@@ -58,7 +58,7 @@ export const FollowUpQuestions = () => {
 
       let localData: Record<string, string>;
 
-      const USE_MOCK_DATA = true;
+      const USE_MOCK_DATA = false;
 
       if (USE_MOCK_DATA) {
         localData = mockFollowUpFormData.followUpResponses || {};

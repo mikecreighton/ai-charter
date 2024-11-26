@@ -42,7 +42,7 @@ export const InitialForm = () => {
     try {
       setProcessing(true);
 
-      const USE_MOCK_DATA = true;
+      const USE_MOCK_DATA = false;
       // For testing cases where the LLM does not come back with follow-up questions
       // Simple = no follow-up questions
       const USE_SIMPLE_MOCK_DATA = false;
