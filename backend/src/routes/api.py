@@ -9,6 +9,7 @@ from ..llm.prompts.initial_analysis import (
 from ..llm.prompts.project_overview import (
     PROJECT_OVERVIEW_SYSTEM_PROMPT,
     PROJECT_OVERVIEW_USER_PROMPT,
+    PROJECT_OVERVIEW_USER_PROMPT_WITH_FOLLOW_UP,
 )
 import json
 from ..config import settings
@@ -48,7 +49,7 @@ class ProjectInput(BaseModel):
 class GenerateOverviewRequest(BaseModel):
     projectName: str
     description: str
-    initialAnalysis: str
+    analysis: str
     followUpQuestions: Optional[List[FollowUpQuestion]] = None
     followUpResponses: Optional[dict[str, str]] = None
 
@@ -145,33 +146,27 @@ async def generate_overview(request: GenerateOverviewRequest):
         # For now, just log what we received
         print("Received submission to generate an overview:")
         print(request)
-        return {"overview": "This will be the overview."}
 
-    #         provider = get_provider()
+        provider = get_provider()
+        provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)
+        # Use a prompt for direct overview generation
 
-    #         # TODO: Need to implement this for real because it'll break right now.
-    #         if request.followUpQuestions and request.responses:
-    #             # Use a prompt that incorporates follow-up responses
-    #             provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)
-    #             prompt = PROJECT_OVERVIEW_USER_PROMPT.format(
-    #                 project_name=request.projectName,
-    #                 description=request.description,
-    #                 initial_analysis=request.initialAnalysis,
-    #                 follow_up_responses=format_followup_responses(
-    #                     request.followUpQuestions, request.responses
-    #                 ),
-    #             )
-    #         else:
-    #             # Use a prompt for direct overview generation
-    #             provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)
-    #             prompt = f"""Project Name: {request.projectName}
+        prompt = PROJECT_OVERVIEW_USER_PROMPT.format(
+            project_name=request.projectName,
+            description=request.description,
+            analysis=request.analysis,
+        )
 
-    # Description: {request.description}
+        if request.followUpQuestions and request.followUpResponses:
+            # Use a prompt that incorporates follow-up responses
+            prompt += PROJECT_OVERVIEW_USER_PROMPT_WITH_FOLLOW_UP.format(
+                follow_up_questions_and_responses=format_followup_responses(
+                    request.followUpQuestions, request.followUpResponses
+                ),
+            )
 
-    # Please generate a comprehensive project overview based on this description."""
-
-    #         response = await provider.generate(prompt, stream=False)
-    #         return {"overview": response}
+        response = await provider.generate(prompt, stream=False)
+        return {"overview": response}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -183,5 +178,5 @@ def format_followup_responses(
     formatted = []
     for q in questions:
         response = responses.get(q.id, "No response provided")
-        formatted.append(f"Q: {q.question}\nA: {response}")
+        formatted.append(f"Your question: {q.question}\nUser response: {response}")
     return "\n\n".join(formatted)

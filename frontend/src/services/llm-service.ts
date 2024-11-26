@@ -31,7 +31,7 @@ export async function processInitialInput(
 export interface OverviewSubmission {
   projectName: string;
   description: string;
-  initialAnalysis: string;
+  analysis: string;
   followUpQuestions?: FollowUpQuestion[];
   followUpResponses?: Record<string, string>;
 }

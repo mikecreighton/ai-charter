@@ -16,7 +16,7 @@ import {
 import { processInitialInput, generateOverview } from '@/services/llm-service';
 import type { InitialAnalysisResponse, ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
-import { mockInitialFormData, mockComplexInitialAnalysisResponse } from '@/mock/form-data';
+import { mockInitialFormData, mockComplexInitialAnalysisResponse, mockSimpleInitialAnalysisResponse } from '@/mock/form-data';
 
 export const InitialForm = () => {
   const { 
@@ -43,6 +43,9 @@ export const InitialForm = () => {
       setProcessing(true);
 
       const USE_MOCK_DATA = true;
+      // For testing cases where the LLM does not come back with follow-up questions
+      // Simple = no follow-up questions
+      const USE_SIMPLE_MOCK_DATA = false;
       let result: InitialAnalysisResponse;
 
       if (USE_MOCK_DATA) {
@@ -50,7 +53,11 @@ export const InitialForm = () => {
         // Need to manually update it here since React state updates are async.
         data.projectName = mockInitialFormData.projectName;
         data.description = mockInitialFormData.description;
-        result = mockComplexInitialAnalysisResponse;
+        if (USE_SIMPLE_MOCK_DATA) {
+          result = mockSimpleInitialAnalysisResponse;
+        } else {
+          result = mockComplexInitialAnalysisResponse;
+        }
 
       } else {
         updateFormData(data);
@@ -76,7 +83,7 @@ export const InitialForm = () => {
         const overviewResult = await generateOverview({
           projectName: data.projectName,
           description: data.description,
-          initialAnalysis: result.analysis,
+          analysis: result.analysis,
         });
         
         console.log('Overview generated:', overviewResult);

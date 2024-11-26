@@ -76,7 +76,7 @@ export const FollowUpQuestions = () => {
       const overviewResult = await generateOverview({
         projectName: formData.projectName,
         description: formData.description,
-        initialAnalysis: analysis!,
+        analysis: analysis!,
         followUpQuestions,
         followUpResponses: localData,
       });
