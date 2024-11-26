@@ -143,10 +143,6 @@ async def process_initial_input(project: ProjectInput) -> ProcessInitialResponse
 async def generate_overview(request: GenerateOverviewRequest):
     """Generate project overview with or without follow-up responses"""
     try:
-        # For now, just log what we received
-        print("Received submission to generate an overview:")
-        print(request)
-
         provider = get_provider()
         provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)
         # Use a prompt for direct overview generation
