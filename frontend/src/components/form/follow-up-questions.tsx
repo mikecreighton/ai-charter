@@ -15,6 +15,7 @@ import {
 import { useForm as useFormContext } from '@/hooks/use-form';
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { generateOverview } from '@/services/llm-service';
+import { mockFollowUpFormData } from '@/mock/form-data';
 
 // Create a dynamic schema based on the questions
 const createFollowUpSchema = (questions: Array<{ id: string }>) => {
@@ -54,23 +55,31 @@ export const FollowUpQuestions = () => {
   const onSubmit = async (data: Record<string, string>) => {
     try {
       setProcessing(true);
-      
-      // Update responses in context
-      Object.entries(data).forEach(([id, response]) => {
+
+      let localData: Record<string, string>;
+
+      const USE_MOCK_DATA = true;
+
+      if (USE_MOCK_DATA) {
+        localData = mockFollowUpFormData.followUpResponses || {};
+      } else {
+        // Update responses in context
+        localData = JSON.parse(JSON.stringify(data));
+      }
+
+      Object.entries(localData).forEach(([id, response]) => {
         if (response) {
           updateFollowUpResponse(id, response);
         }
       });
-
-      // Submit everything to the API
+      
       const overviewResult = await generateOverview({
         projectName: formData.projectName,
         description: formData.description,
         initialAnalysis: analysis!,
         followUpQuestions,
-        responses: data,
+        responses: localData,
       });
-
       console.log('Overview generated:', overviewResult);
       
       setOverview(overviewResult.overview);

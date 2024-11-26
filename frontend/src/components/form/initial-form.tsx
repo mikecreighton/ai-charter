@@ -14,8 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { processInitialInput, generateOverview } from '@/services/llm-service';
-import type { ProjectFormData } from "@/types/form";
+import type { InitialAnalysisResponse, ProjectFormData } from "@/types/form";
 import { useForm as useFormContext } from '@/hooks/use-form';
+import { mockInitialFormData, mockComplexInitialAnalysisResponse } from '@/mock/form-data';
 
 export const InitialForm = () => {
   const { 
@@ -40,15 +41,26 @@ export const InitialForm = () => {
   const onSubmit = async (data: ProjectFormData) => {
     try {
       setProcessing(true);
-      updateFormData(data);
-      
-      // Get initial analysis
-      const result = await processInitialInput(
-        data.projectName,
-        data.description
-      );
 
-      console.log('Initial analysis result:', result);
+      const USE_MOCK_DATA = true;
+      let result: InitialAnalysisResponse;
+
+      if (USE_MOCK_DATA) {
+        updateFormData(mockInitialFormData);
+        // Need to manually update it here since React state updates are async.
+        data.projectName = mockInitialFormData.projectName;
+        data.description = mockInitialFormData.description;
+        result = mockComplexInitialAnalysisResponse;
+
+      } else {
+        updateFormData(data);
+        // Get initial analysis
+        result = await processInitialInput(
+          data.projectName,
+          data.description
+        );
+        console.log('Initial analysis result:', result);
+      }
       
       if (result.analysis) {
         setAnalysis(result.analysis);
