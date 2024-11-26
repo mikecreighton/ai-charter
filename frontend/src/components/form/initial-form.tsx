@@ -40,10 +40,12 @@ export const InitialForm = () => {
 
       console.log('Result:', result);
 
+
       if (result.needsFollowUp && result.followUpQuestions) {
         setFollowUps(result.followUpQuestions);
         setStep('followUp');
       } else {
+        // TODO: If we don't need a follow up, we should just generate the overview here.
         setStep('preview');
       }
       
