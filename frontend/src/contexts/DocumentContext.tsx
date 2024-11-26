@@ -1,40 +1,51 @@
-import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { DocumentType, GeneratedDocument } from '@/types/documents';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 
-interface DocumentState {
-  documents: Record<DocumentType, GeneratedDocument>;
+export type DocumentType = 'overview' | 'prd' | 'techStack' | 'codeRules' | 'developmentPlan';
+export type DocumentStatus = 'pending' | 'generating' | 'complete' | 'error';
+
+export interface GeneratedDocument {
+  content: string;
+  status: DocumentStatus;
+  error?: string;
 }
 
-const initialState: DocumentState = {
-  documents: {
-    overview: { type: 'overview', content: '', status: 'pending' },
-    prd: { type: 'prd', content: '', status: 'pending' },
-    techStack: { type: 'techStack', content: '', status: 'pending' },
-    codeRules: { type: 'codeRules', content: '', status: 'pending' },
-    developmentPlan: { type: 'developmentPlan', content: '', status: 'pending' }
-  }
-};
-
-const STORAGE_KEY = 'ai-charter-documents';
-
-function loadInitialState(): DocumentState {
-  try {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-      return JSON.parse(savedState);
-    }
-  } catch (error) {
-    console.error('Error loading documents from localStorage:', error);
-  }
-  return initialState;
+export interface DocumentState {
+  documents: Record<DocumentType, GeneratedDocument>;
 }
 
 type DocumentAction = 
   | { type: 'START_GENERATION'; documentType: DocumentType }
-  | { type: 'GENERATION_COMPLETE'; documentType: DocumentType; content: string }
-  | { type: 'GENERATION_ERROR'; documentType: DocumentType; error: string };
+  | { type: 'COMPLETE_GENERATION'; documentType: DocumentType; content: string }
+  | { type: 'SET_ERROR'; documentType: DocumentType; error: string }
+  | { type: 'UPDATE_DOCUMENT'; documentType: DocumentType; content: string };
 
-function documentReducer(state: DocumentState, action: DocumentAction): DocumentState {
+const initialState: DocumentState = {
+  documents: {
+    overview: { status: 'pending', content: '' },
+    prd: { status: 'pending', content: '' },
+    techStack: { status: 'pending', content: '' },
+    codeRules: { status: 'pending', content: '' },
+    developmentPlan: { status: 'pending', content: '' },
+  },
+};
+
+const STORAGE_KEY = 'ai-charter-documents';
+
+const loadInitialState = (): DocumentState => {
+  if (typeof window === 'undefined') return initialState;
+  
+  const savedState = localStorage.getItem(STORAGE_KEY);
+  if (savedState) {
+    try {
+      return JSON.parse(savedState);
+    } catch (error) {
+      console.error('Failed to parse saved document state:', error);
+    }
+  }
+  return initialState;
+};
+
+const documentReducer = (state: DocumentState, action: DocumentAction): DocumentState => {
   let newState: DocumentState;
   
   switch (action.type) {
@@ -43,71 +54,65 @@ function documentReducer(state: DocumentState, action: DocumentAction): Document
         ...state,
         documents: {
           ...state.documents,
-          [action.documentType]: {
-            ...state.documents[action.documentType],
-            status: 'generating'
-          }
-        }
+          [action.documentType]: { ...state.documents[action.documentType], status: 'generating' },
+        },
       };
       break;
-      
-    case 'GENERATION_COMPLETE':
+    case 'COMPLETE_GENERATION':
       newState = {
         ...state,
         documents: {
           ...state.documents,
-          [action.documentType]: {
-            type: action.documentType,
-            content: action.content,
-            status: 'complete'
-          }
-        }
+          [action.documentType]: { status: 'complete', content: action.content },
+        },
       };
       break;
-      
-    case 'GENERATION_ERROR':
+    case 'SET_ERROR':
       newState = {
         ...state,
         documents: {
           ...state.documents,
-          [action.documentType]: {
-            ...state.documents[action.documentType],
-            status: 'error',
-            error: action.error
-          }
-        }
+          [action.documentType]: { status: 'error', content: '', error: action.error },
+        },
       };
       break;
-      
+    case 'UPDATE_DOCUMENT':
+      newState = {
+        ...state,
+        documents: {
+          ...state.documents,
+          [action.documentType]: { status: 'complete', content: action.content },
+        },
+      };
+      break;
     default:
       return state;
   }
 
-  try {
+  // Save to localStorage after each state change
+  if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
-  } catch (error) {
-    console.error('Error saving documents to localStorage:', error);
   }
-
+  
   return newState;
-}
+};
 
-const DocumentContext = createContext<{
+interface DocumentContextType {
   state: DocumentState;
   startGeneration: (type: DocumentType) => void;
   completeGeneration: (type: DocumentType, content: string) => void;
   setError: (type: DocumentType, error: string) => void;
-} | null>(null);
+  updateDocument: (type: DocumentType, content: string) => void;
+}
 
-export function DocumentProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(documentReducer, loadInitialState());
+const DocumentContext = createContext<DocumentContextType | undefined>(undefined);
 
+export const DocumentProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, dispatch] = useReducer(documentReducer, initialState, loadInitialState);
+
+  // Optional: Save to localStorage whenever state changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.error('Error saving documents to localStorage:', error);
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
   const startGeneration = (type: DocumentType) => {
@@ -115,23 +120,27 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
   };
 
   const completeGeneration = (type: DocumentType, content: string) => {
-    dispatch({ type: 'GENERATION_COMPLETE', documentType: type, content });
+    dispatch({ type: 'COMPLETE_GENERATION', documentType: type, content });
   };
 
   const setError = (type: DocumentType, error: string) => {
-    dispatch({ type: 'GENERATION_ERROR', documentType: type, error });
+    dispatch({ type: 'SET_ERROR', documentType: type, error });
+  };
+
+  const updateDocument = (type: DocumentType, content: string) => {
+    dispatch({ type: 'UPDATE_DOCUMENT', documentType: type, content });
   };
 
   return (
-    <DocumentContext.Provider value={{ state, startGeneration, completeGeneration, setError }}>
+    <DocumentContext.Provider value={{ state, startGeneration, completeGeneration, setError, updateDocument }}>
       {children}
     </DocumentContext.Provider>
   );
-}
+};
 
 export const useDocuments = () => {
   const context = useContext(DocumentContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useDocuments must be used within a DocumentProvider');
   }
   return context;
