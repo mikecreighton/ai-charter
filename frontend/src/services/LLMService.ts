@@ -71,23 +71,6 @@ class LLMService {
     return response.json();
   }
 
-  async generateOverview(data: OverviewSubmission): Promise<GenerateOverviewResponse> {
-    const response = await fetch(`${config.apiUrl}/api/generate-overview`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'An unknown error occurred' }));
-      throw new Error(error.detail || 'Failed to process follow-up responses');
-    }
-
-    return response.json();
-  }
-
   async generate(jsonStringPayload: string): Promise<string> {
     const response = await fetch(`${config.apiUrl}/api/generate`, {
       method: 'POST',

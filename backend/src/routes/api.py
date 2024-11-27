@@ -102,14 +102,6 @@ class GenerateDocumentResponse(BaseModel):
     error: Optional[str] = None
 
 
-class GenerateOverviewRequest(BaseModel):
-    projectName: str
-    description: str
-    analysis: str
-    followUpQuestions: Optional[List[FollowUpQuestion]] = None
-    followUpResponses: Optional[dict[str, str]] = None
-
-
 class ErrorResponse(BaseModel):
     detail: str
 
@@ -245,6 +237,7 @@ async def generate_document(request: GenerateDocumentRequest):
             return {"success": True, "content": content}
 
         elif isinstance(request, PrdRequest):
+            return {"success": True, "content": "PRD Test Content"}
             raise HTTPException(status_code=501, detail="PRD generation not implemented yet")
 
         elif isinstance(request, TechStackRequest):
@@ -262,37 +255,6 @@ async def generate_document(request: GenerateDocumentRequest):
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Document generation failed: {str(e)}")
-
-
-@router.post("/generate-overview")
-async def generate_overview(request: GenerateOverviewRequest):
-    """
-    Generate project overview with or without follow-up responses
-    """
-    try:
-        provider = get_provider()
-        provider.set_system_message(PROJECT_OVERVIEW_SYSTEM_PROMPT)
-        # Use a prompt for direct overview generation
-
-        prompt = PROJECT_OVERVIEW_USER_PROMPT.format(
-            project_name=request.projectName,
-            description=request.description,
-            analysis=request.analysis,
-        )
-
-        if request.followUpQuestions and request.followUpResponses:
-            # Use a prompt that incorporates follow-up responses
-            prompt += PROJECT_OVERVIEW_USER_PROMPT_WITH_FOLLOW_UP.format(
-                follow_up_questions_and_responses=format_followup_responses(
-                    request.followUpQuestions, request.followUpResponses
-                ),
-            )
-
-        response = await provider.generate(prompt, stream=False)
-        return {"overview": response}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 def format_followup_responses(

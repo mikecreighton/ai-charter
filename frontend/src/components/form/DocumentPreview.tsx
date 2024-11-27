@@ -86,8 +86,7 @@ export const DocumentPreview = () => {
               key={docId} 
               value={docId}
               disabled={documentState.documents[docId]?.status !== 'complete' && 
-                DOCUMENT_SEQUENCE.indexOf(docId) !== 
-                DOCUMENT_SEQUENCE.indexOf(activeTab) + 1}
+                docId !== activeTab}
             >
               {DOCUMENT_LABELS[docId]}
             </TabsTrigger>
