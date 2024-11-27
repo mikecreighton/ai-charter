@@ -30,7 +30,8 @@ export const DocumentMarkdownEditor = ({
   };
 
   const showNextButton = nextDocument && 
-    documentState.documents[nextDocument]?.status === 'pending' &&
+    (documentState.documents[nextDocument]?.status === 'pending' ||
+     documentState.documents[nextDocument]?.status === 'error') &&
     onGenerateNext;
 
   if (isEditing) {
@@ -93,7 +94,10 @@ export const DocumentMarkdownEditor = ({
       {showNextButton && (
         <div className="flex justify-center pt-4">
           <Button onClick={onGenerateNext} size="lg">
-            Generate {nextDocument.charAt(0).toUpperCase() + nextDocument.slice(1)}
+            {documentState.documents[nextDocument!]?.status === 'error' 
+              ? `Retry ${nextDocument.charAt(0).toUpperCase() + nextDocument.slice(1)}`
+              : `Generate ${nextDocument.charAt(0).toUpperCase() + nextDocument.slice(1)}`
+            }
           </Button>
         </div>
       )}

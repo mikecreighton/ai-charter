@@ -16,12 +16,38 @@ export class DocumentGenerator {
       this.validateDependencies(type, existingDocs);
       
       const requestData = await this.prepareRequestData(type, formState, existingDocs);
-      const response = await llmService.generate(requestData);
       
-      return {
-        success: true,
-        content: this.sanitizeMarkdown(response)
-      };
+      try {
+        const content = await llmService.generate(requestData);
+        return {
+          success: true,
+          content: this.sanitizeMarkdown(content)
+        };
+      } catch (error) {
+        // Don't retry for specific status codes
+        if (error instanceof Error) {
+          const errorMessage = error.message;
+          
+          // Don't retry for 501 (Not Implemented) or 422 (Validation Error)
+          if (errorMessage.includes('501') || errorMessage.includes('422')) {
+            return {
+              success: false,
+              error: errorMessage
+            };
+          }
+          
+          // Only retry for 500-level errors (except 501)
+          if (errorMessage.includes('500') && retryCount < this.MAX_RETRIES) {
+            await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
+            return this.generateDocument(type, formState, existingDocs, retryCount + 1);
+          }
+        }
+        
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+      }
     } catch (error) {
       if (error instanceof DependencyError) {
         return {
@@ -30,12 +56,6 @@ export class DocumentGenerator {
         };
       }
 
-      // Handle retries for non-dependency errors
-      if (error instanceof Error && retryCount < this.MAX_RETRIES) {
-        await new Promise(resolve => setTimeout(resolve, this.RETRY_DELAY));
-        return this.generateDocument(type, formState, existingDocs, retryCount + 1);
-      }
-      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'

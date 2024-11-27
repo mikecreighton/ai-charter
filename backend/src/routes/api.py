@@ -110,6 +110,10 @@ class GenerateOverviewRequest(BaseModel):
     followUpResponses: Optional[dict[str, str]] = None
 
 
+class ErrorResponse(BaseModel):
+    detail: str
+
+
 def get_provider():
     api_key = settings.get_active_api_key()
     if not api_key:
@@ -233,25 +237,31 @@ async def generate_document(request: GenerateDocumentRequest):
 
             # Generate the content
             content = await provider.generate(prompt, stream=False)
-            print("-- HIGH-LEVEL OVERVIEW CONTENT ------------------------- ")
-            print(content + "\n")
+            if not content:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Failed to generate content - empty response from LLM",
+                )
             return {"success": True, "content": content}
 
-        # TODO: Implement other document types (PRD, TechStack, etc.)
         elif isinstance(request, PrdRequest):
-            return {"success": True, "content": "PRD content"}
+            raise HTTPException(status_code=501, detail="PRD generation not implemented yet")
 
         elif isinstance(request, TechStackRequest):
-            return {"success": True, "content": "Tech Stack content"}
+            raise HTTPException(
+                status_code=501, detail="Tech stack generation not implemented yet"
+            )
 
         elif isinstance(request, CodeRulesRequest):
-            return {"success": True, "content": "Code Rules content"}
+            return {"success": False, "error": "Not implemented"}
 
         elif isinstance(request, DevelopmentPlanRequest):
-            return {"success": True, "content": "Development Plan content"}
+            return {"success": False, "error": "Not implemented"}
 
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Document generation failed: {str(e)}")
 
 
 @router.post("/generate-overview")

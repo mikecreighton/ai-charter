@@ -32,9 +32,9 @@ export const DocumentPreview = () => {
     const nextDoc = DOCUMENT_SEQUENCE[currentIndex + 1];
     
     if (nextDoc && formData.projectName && formData.description) {
+      startGeneration(nextDoc);
+      
       try {
-        startGeneration(nextDoc);
-        
         const generationState: DocumentGenerationState = {
           formData: {
             projectName: formData.projectName,
@@ -55,11 +55,15 @@ export const DocumentPreview = () => {
           completeGeneration(nextDoc, generationResult.content);
           setActiveTab(nextDoc);
         } else {
-          setError(nextDoc, generationResult.error || 'Failed to generate document');
+          const errorMessage = generationResult.error || 'Failed to generate document';
+          console.error(`Document generation failed: ${errorMessage}`);
+          setError(nextDoc, errorMessage);
+          setActiveTab(currentDoc);
         }
       } catch (error) {
-        console.error('Failed to generate document:', error);
-        setError(nextDoc, error instanceof Error ? error.message : 'Failed to generate document');
+        console.error('Unexpected error during document generation:', error);
+        setError(nextDoc, error instanceof Error ? error.message : 'An unexpected error occurred');
+        setActiveTab(currentDoc);
       }
     }
   };
@@ -81,7 +85,9 @@ export const DocumentPreview = () => {
             <TabsTrigger 
               key={docId} 
               value={docId}
-              disabled={documentState.documents[docId]?.status !== 'complete'}
+              disabled={documentState.documents[docId]?.status !== 'complete' && 
+                DOCUMENT_SEQUENCE.indexOf(docId) !== 
+                DOCUMENT_SEQUENCE.indexOf(activeTab) + 1}
             >
               {DOCUMENT_LABELS[docId]}
             </TabsTrigger>
@@ -102,8 +108,16 @@ export const DocumentPreview = () => {
                 Generating {DOCUMENT_LABELS[docId]}...
               </div>
             ) : documentState.documents[docId]?.status === 'error' ? (
-              <div className="p-4 text-center text-destructive">
-                Error: {documentState.documents[docId].error}
+              <div className="p-4 text-center text-destructive space-y-4">
+                <div>Error: {documentState.documents[docId].error}</div>
+                <button
+                  onClick={() => handleGenerateNext(
+                    DOCUMENT_SEQUENCE[DOCUMENT_SEQUENCE.indexOf(docId) - 1]
+                  )}
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90"
+                >
+                  Retry Generation
+                </button>
               </div>
             ) : (
               <div className="p-4 text-center text-muted-foreground">

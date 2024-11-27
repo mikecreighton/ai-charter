@@ -97,12 +97,21 @@ class LLMService {
       body: jsonStringPayload,
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'An unknown error occurred' }));
-      throw new Error(error.detail || 'Failed to generate content');
+      const errorMessage = data.detail || `Server error (${response.status}): Failed to generate content`;
+      throw new Error(errorMessage);
     }
 
-    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Generation failed');
+    }
+
+    if (!data.content) {
+      throw new Error('No content received from server');
+    }
+
     return data.content;
   }
 }

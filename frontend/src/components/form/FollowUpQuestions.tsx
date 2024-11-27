@@ -60,7 +60,7 @@ export const FollowUpQuestions = () => {
       setProcessing(true);
 
       let localData: Record<string, string>;
-      const USE_MOCK_DATA = false;
+      const USE_MOCK_DATA = true;
 
       if (USE_MOCK_DATA) {
         localData = mockFollowUpFormData.followUpResponses || {};
